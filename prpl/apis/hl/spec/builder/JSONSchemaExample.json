@@ -1,0 +1,129 @@
+{
+  "description": "User.Accounts Object",
+  "links": {
+    "Add": {
+      "description": "Adds a new User Account.",
+      "title": "Add User Account",
+      "mresponse": "{ \n  \"Id\": \"Admin\"\n}",
+      "sample": "{\n  \"Header\": {\n    \"Code\": 0,\n    \"Name\": \"OK\"\n  },\n  \"Body\": { \n    \"Id\": \"Admin\"\n  }\n}",
+      "targetSchema": {
+        "type": "object",
+        "properties": {
+          "List": {
+            "items": {
+              "rel": "self"
+            },
+            "type": "array"
+          }
+        }
+      },
+      "href": "Procedure: Add",
+      "arguments": "{\n  \"Id\": \"Admin\",\n  \"Enabled\": true,\n  \"Name\": \"Administrator\",\n  \"Password\": \"prplFoundation\",\n  \"Description\": \"Home-Gateway administrator.\",\n  \"RoleId\": \"User.Roles.Root\"\n}",
+      "rel": "instances",
+      "schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    "List": {
+      "description": "Retrieves a list of User Accounts.",
+      "title": "List User Account",
+      "mresponse": "{\n  \"List\": [\n    {\n      \"Id\": \"Admin\",\n      \"Enabled\": true,\n      \"Name\": \"Administrator\",\n      \"Hash\": {\n        \"Fingerprint\": \"21232f297a57a5a743894a0e4a801fc3\",\n        \"Type\": \"MD5\"\n      },\n      \"Description\": \"Home-Gateway administrator.\",\n      \"RoleId\": \"User.Roles.Root\"\n    }\n  ],\n  \"Limit\": 10,\n  \"Offset\": 0\n}",
+      "sample": "{\n  \"Header\": {\n    \"Code\": 0,\n    \"Name\": \"OK\"\n  },\n  \"Body\": {\n    \"List\": [\n      {\n        \"Id\": \"Admin\",\n        \"Enabled\": true,\n        \"Name\": \"Administrator\",\n        \"Hash\": {\n          \"Fingerprint\": \"21232f297a57a5a743894a0e4a801fc3\",\n          \"Type\": \"MD5\"\n        },\n        \"Description\": \"Home-Gateway administrator.\",\n        \"RoleId\": \"User.Roles.Root\"\n      }\n    ],\n    \"Limit\": 10,\n    \"Offset\": 0\n  }\n}",
+      "targetSchema": {
+        "type": "object",
+        "properties": {
+          "List": {
+            "items": {
+              "rel": "self"
+            },
+            "type": "array"
+          }
+        }
+      },
+      "href": "Procedure: List",
+      "arguments": "{\n  \"Limit\": 10,\n  \"Offset\": 0\n}",
+      "rel": "instances",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "default": 20,
+            "max": 200,
+            "type": "integer",
+            "description": "How many objects to return",
+            "min": 1
+          },
+          "offset": {
+            "default": 0,
+            "type": "integer",
+            "description": "Which object index to start with",
+            "example": 45
+          }
+        }
+      }
+    }
+  },
+  "title": "User.Accounts",
+  "required": [
+    "Name",
+    "Password",
+    "RoleId"
+  ],
+  "properties": {
+    "Name": {
+      "notes": "Possible values are any string with length from 1 up to 64 chars. ",
+      "type": "String",
+      "description": "User Account name.",
+      "format": "-"
+    },
+    "Hash.Fingerprint": {
+      "notes": "-",
+      "readOnly": true,
+      "type": "String",
+      "description": "User Account password hash fingerprint.",
+      "format": "-"
+    },
+    "Hash.Type": {
+      "notes": "Possible values are \"MD5\", \"SHA-256\" or \"SHA-512\". ",
+      "readOnly": true,
+      "type": "String",
+      "description": "User Account password hash type.",
+      "format": "-"
+    },
+    "RoleId": {
+      "notes": "Possible values are valid \"User.Accounts.Roles.{RoleId}\" object. ",
+      "type": "String",
+      "description": "User Account Id of the linked role.",
+      "format": "-"
+    },
+    "Enabled": {
+      "notes": "Default Value is \"true\". Possible values are \"true\" or \"false\". ",
+      "type": "Boolean",
+      "description": "User Account administrative status.",
+      "format": "-"
+    },
+    "Password": {
+      "notes": "Possible values are any string with length from 3 up to 64 chars. ",
+      "writeOnly": true,
+      "type": "String",
+      "description": "User Account password.",
+      "format": "-"
+    },
+    "Id": {
+      "notes": "Default Value is \"Integer starting at 0\". Possible values are any string with length from 1 up to 64 chars. Format is 1 up to 64 chars.",
+      "type": "String",
+      "description": "User Account unique identifier.",
+      "format": "1 up to 64 chars"
+    },
+    "Description": {
+      "notes": "Default Value is \"null\". Possible values are \"null\" or any string with length from 1 up to 64 chars. ",
+      "type": "String",
+      "description": "User Account description.",
+      "format": "-"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "id": "User.Accounts"
+}
