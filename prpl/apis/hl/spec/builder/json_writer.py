@@ -144,8 +144,6 @@ class JSONSchemaWriter:
     def makePropertiesFromSchema(self, object, properties):
       res = {"required":[], "properties":properties}
 
-      # print(res["properties"])
-
       for p in object.procedures:
 
         if p.name != "List":
@@ -188,7 +186,6 @@ class JSONSchemaWriter:
       name = re.sub('\.\{[^.]*\}$','', obj.name)
 
       if not name in schemas.keys():
-        print(name)
         schemas[name] = self.makeBaseSchema(name, obj)   
 
       ## extract properties and required properties while merging with existing properties
@@ -242,10 +239,8 @@ class JSONSchemaWriter:
 
     def makePathsFromObject(self, object):
       res = {}
-      # object.fields = []
 
       for pr in object.procedures:
-        print(pr)
         
         try:
           s_response = json.dumps(json.loads(pr.sample_response))
@@ -324,7 +319,6 @@ class JSONSchemaWriter:
 
         res[pr.name] = obj
 
-      print(res.keys())
       return res
 
     def addPaths(self, idx, obj):
@@ -368,6 +362,6 @@ class JSONSchemaWriter:
         ## populate API object
         self.populate()
 
+        ## write file
         self.writeOut()
 
-        #print(json.dumps(self.json_api_object))
