@@ -56,7 +56,7 @@ class ObjectFactory:
         self.fields = sorted(fields, key=itemgetter('Layer', 'Object', 'Procedure', 'Field'))
         self.events = sorted(events, key=itemgetter('Layer', 'Object', 'Code'))
         self.instances = sorted(instances, key=itemgetter('Layer', 'Object', 'Instance'))
-        self.response_codes = sorted(response_codes, key=itemgetter('Code'))
+        self.response_codes = sorted(response_codes, key=itemgetter('Name'))
         self.change_log = change_log
         self.objects = []
 
@@ -298,9 +298,9 @@ class ObjectFactory:
             rc = self.response_codes[0]
 
             # Create new response code object instance and append.
-            api_code = HLAPIResponseCode(rc['Code'], rc['Name'], rc['Description'], rc['Sample'])
+            api_code = HLAPIResponseCode(rc['Name'], rc['Description'], rc['Sample'])
             codes.append(api_code)
-            self.logger.debug('Response Codes - Created response code "{}" ({}).'.format(api_code.code, api_code.name))
+            self.logger.debug('Response Codes - Created response code "{}".'.format(api_code.name))
 
             # Delete parsed response code.
             del self.response_codes[0]

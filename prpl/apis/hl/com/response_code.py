@@ -15,7 +15,7 @@ class ResponseCode:
 
     """
 
-    def __init__(self, code, name, description, sample):
+    def __init__(self, name, description, sample):
         """Creates a new HL-API event.
 
         Args:
@@ -26,7 +26,7 @@ class ResponseCode:
 
         """
 
-        self.code = code
+        # self.code = code
         self.name = name
         self.description = description
         self.sample = sample
@@ -39,5 +39,5 @@ class ResponseCode:
 
         """
 
-        return '{} - {}'.format(self.code, self.name)
+        return '{} - {}'.format(self.name)
 
