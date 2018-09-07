@@ -29,7 +29,7 @@ class JSONSchemaWriter:
 
     """
 
-    def __init__(self, api, folder, template='specs/templates/prpl.json'):
+    def __init__(self, api, folder, template='specs/templates/prpl.json', object_template='specs/templates/object.json'):
         """Initializes the specification writer.
 
         Args:
@@ -41,7 +41,13 @@ class JSONSchemaWriter:
         self.api = api
         self.folder = folder
         self.template = template
+        
+        f = open(object_template, "r")
+        self.objectTemplateString = f.read()
+        f.close()
+
         self.jsonResponses = None
+        self.objects_and_paths = {}
 
         # Init logger.
         self.logger = logging.getLogger('JSONSchemaWriter')
@@ -157,10 +163,10 @@ class JSONSchemaWriter:
 
       return res
 
-    def makeEventsFromSchema(self, object):
+    def makeEventsFromSchema(self, obj):
       res = {}
 
-      for ev in object.events:
+      for ev in obj.events:
         res[ev.code] = {
           "content": {
             "application/json":{
@@ -173,35 +179,86 @@ class JSONSchemaWriter:
 
       return res
 
-    def addSchemas(self, idx, obj):
-      """
-        generates schema entries
-      """
+    # def addSchemas(self, idx, obj):
+    #   """
+    #     generates schema entries
+    #   """
 
-      #for idx, obj in enumerate(self.api.objects):
+    #   #for idx, obj in enumerate(self.api.objects):
 
-      schemas = self.json_api_object["components"]["schemas"]
+    #   schemas = self.json_api_object["components"]["schemas"]
+
+    #   ## get the name of the root object instead of the path
+    #   name = re.sub('\.\{[^.]*\}$','', obj.name)
+
+    #   if not name in schemas.keys():
+    #     schemas[name] = self.makeBaseSchema(name, obj)   
+
+    #   ## extract properties and required properties while merging with existing properties
+    #   properties_and_required = self.makePropertiesFromSchema(obj, schemas[name]["properties"])
+
+    #   ## store properties
+    #   schemas[name]["properties"] = properties_and_required["properties"]
+
+    #   ## merge with already required properties
+    #   schemas[name]["required"] = schemas[name]["required"] + properties_and_required["required"]
+
+    #   ## create events list
+    #   schemas[name]["events"] = {**schemas[name]["events"], **self.makeEventsFromSchema(obj)}
+
+    #   self.json_api_object["components"]["schemas"] = schemas
+
+
+    def getSchema(self, name, idx, obj):
+
+      # schemas = self.json_api_object["components"]["schemas"] 
 
       ## get the name of the root object instead of the path
-      name = re.sub('\.\{[^.]*\}$','', obj.name)
+      # name = re.sub('\.\{[^.]*\}$','', obj.name)
+
+      ## check if we already have a file
+
+      try:
+        fname = "{}{}.json".format(self.folder, name)
+        # print("looking for {}".format(fname))
+        f = open(fname, 'r')
+        obj_dict = json.loads(f.read())
+        f.close()
+
+        schemas = obj_dict["components"]["schemas"]
+        # print("found existing schema {}".format(schemas))
+      except Exception as e:
+        # print("didn't find it {}".format(e))
+        schemas = json.loads(self.objectTemplateString)
 
       if not name in schemas.keys():
-        schemas[name] = self.makeBaseSchema(name, obj)   
+        res = self.makeBaseSchema(name, obj)   
+      else:
+        res = schemas[name]
 
       ## extract properties and required properties while merging with existing properties
-      properties_and_required = self.makePropertiesFromSchema(obj, schemas[name]["properties"])
+      properties_and_required = self.makePropertiesFromSchema(obj, res["properties"])
 
       ## store properties
-      schemas[name]["properties"] = properties_and_required["properties"]
+      res["properties"] = properties_and_required["properties"]
 
       ## merge with already required properties
-      schemas[name]["required"] = schemas[name]["required"] + properties_and_required["required"]
+      res["required"] = res["required"] + properties_and_required["required"]
 
       ## create events list
-      schemas[name]["events"] = {**schemas[name]["events"], **self.makeEventsFromSchema(obj)}
+      res["events"] = {**res["events"], **self.makeEventsFromSchema(obj)}
 
-      self.json_api_object["components"]["schemas"] = schemas
+      # print(res["events"])
 
+      return res
+
+    # self.json_api_object["components"]["schemas"] = schemas
+     
+
+      # if not name in self.json_api_object["paths"]:
+      #     self.json_api_object["paths"][name] = {}
+
+      # return self.makePathsFromObject(obj)
 
 ####################################################################
 ################################ SCHEMAS EOF
@@ -223,7 +280,7 @@ class JSONSchemaWriter:
           except:
             r_sample = ""
 
-          self.jsonResponses[r.code] = {
+          self.jsonResponses[r.name] = {
             "content":{
               "application/json": {
                 "example": r_sample,
@@ -317,42 +374,75 @@ class JSONSchemaWriter:
               new_param["schema"] = json.loads(json.dumps(INTEGER_PARAMETER_SCHEMA))
             obj["parameters"].append(new_param)
 
+        ## write procedure to out object
         res[pr.name] = obj
 
       return res
 
-    def addPaths(self, idx, obj):
-        """
-          adds paths to API object
-        """
+    # def addPaths(self, idx, obj):
+    #     """
+    #       adds paths to API object
+    #     """
 
-        name = re.sub('\.\{[^.]*\}$','', obj.name)
+    #     name = re.sub('\.\{[^.]*\}$','', obj.name)
 
-        if not name in self.json_api_object["paths"]:
+    #     if not name in self.json_api_object["paths"]:
+    #       self.json_api_object["paths"][name] = {}
+
+    #     self.json_api_object["paths"][name].update(self.makePathsFromObject(obj))
+
+    def getPaths(self, name, idx, obj):
+
+      if not name in self.json_api_object["paths"]:
           self.json_api_object["paths"][name] = {}
 
-        self.json_api_object["paths"][name].update(self.makePathsFromObject(obj))
+      return self.makePathsFromObject(obj)
 
 
 ####################################################################
 ################################ PATHS EOF
 ####################################################################
 
-    def populate(self):
-        for idx, obj in enumerate(self.api.objects):
+    # def populate(self):
+    #   for idx, obj in enumerate(self.api.objects):
 
-          ## add schemas
-          self.addSchemas(idx, obj)
+    #     ## add schemas
+    #     self.addSchemas(idx, obj)
 
-          ## add paths
-          self.addPaths(idx, obj)
+    #     ## add paths
+    #     self.addPaths(idx, obj)
 
-    def writeOut(self):
-      filepath = "{}{}.json".format(self.folder, "api")
+    def writeFile(self, name, obj):
+      filepath = "{}{}.json".format(self.folder, name)
 
       f = open(filepath, "w")
-      f.write(json.dumps(self.json_api_object, indent=2))
+      f.write(json.dumps(obj, indent=2))
       f.close()
+
+    def createFilesAndPopulateObject(self):
+      for idx, obj in enumerate(self.api.objects):
+        out = json.loads(self.objectTemplateString)
+        # out = {"paths":{}, "schema": {}}
+
+        name = re.sub('\.\{[^.]*\}$','', obj.name)
+
+        ## add schemas
+        out["components"]["schemas"][name] = self.getSchema(name, idx, obj)
+        print("{} {}".format(name, out["components"]["schemas"][name]["events"]))
+
+        ## add paths
+        out["paths"] = self.getPaths(name, idx, obj)
+        self.json_api_object["paths"][name]["$ref"] = "{}.json#/paths".format(name)
+        self.json_api_object["components"]["schemas"].update({name:{"$ref": "{}.json#/components/schemas/{}".format(name, name)}})
+        self.writeFile(name, out)
+
+    def writeOut(self):
+      self.writeFile("api", self.json_api_object)
+      # filepath = "{}{}.json".format(self.folder, "api")
+
+      # f = open(filepath, "w")
+      # f.write(json.dumps(self.json_api_object, indent=2))
+      # f.close()
 
     def build(self):
 
@@ -360,7 +450,7 @@ class JSONSchemaWriter:
         self.loadBlankJSONAPIObjectFromTemplate()
 
         ## populate API object
-        self.populate()
+        self.createFilesAndPopulateObject()
 
         ## write file
         self.writeOut()
