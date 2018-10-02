@@ -220,15 +220,15 @@ class JSONSchemaWriter:
 
       try:
         fname = "{}{}.json".format(self.folder, name)
-        # print("looking for {}".format(fname))
+        
         f = open(fname, 'r')
         obj_dict = json.loads(f.read())
         f.close()
 
         schemas = obj_dict["components"]["schemas"]
-        # print("found existing schema {}".format(schemas))
+        
       except Exception as e:
-        # print("didn't find it {}".format(e))
+        
         schemas = json.loads(self.objectTemplateString)
 
       if not name in schemas.keys():
@@ -248,17 +248,7 @@ class JSONSchemaWriter:
       ## create events list
       res["events"] = {**res["events"], **self.makeEventsFromSchema(obj)}
 
-      # print(res["events"])
-
       return res
-
-    # self.json_api_object["components"]["schemas"] = schemas
-     
-
-      # if not name in self.json_api_object["paths"]:
-      #     self.json_api_object["paths"][name] = {}
-
-      # return self.makePathsFromObject(obj)
 
 ####################################################################
 ################################ SCHEMAS EOF
@@ -298,7 +288,6 @@ class JSONSchemaWriter:
       res = {}
 
       for pr in object.procedures:
-        
         try:
           s_response = json.dumps(json.loads(pr.sample_response))
         except:
@@ -377,24 +366,13 @@ class JSONSchemaWriter:
         ## write procedure to out object
         res[pr.name] = obj
 
+
       return res
-
-    # def addPaths(self, idx, obj):
-    #     """
-    #       adds paths to API object
-    #     """
-
-    #     name = re.sub('\.\{[^.]*\}$','', obj.name)
-
-    #     if not name in self.json_api_object["paths"]:
-    #       self.json_api_object["paths"][name] = {}
-
-    #     self.json_api_object["paths"][name].update(self.makePathsFromObject(obj))
 
     def getPaths(self, name, idx, obj):
 
       if not name in self.json_api_object["paths"]:
-          self.json_api_object["paths"][name] = {}
+        self.json_api_object["paths"][name] = {}
 
       return self.makePathsFromObject(obj)
 
@@ -402,15 +380,6 @@ class JSONSchemaWriter:
 ####################################################################
 ################################ PATHS EOF
 ####################################################################
-
-    # def populate(self):
-    #   for idx, obj in enumerate(self.api.objects):
-
-    #     ## add schemas
-    #     self.addSchemas(idx, obj)
-
-    #     ## add paths
-    #     self.addPaths(idx, obj)
 
     def writeFile(self, name, obj):
       filepath = "{}{}.json".format(self.folder, name)
@@ -421,28 +390,35 @@ class JSONSchemaWriter:
 
     def createFilesAndPopulateObject(self):
       for idx, obj in enumerate(self.api.objects):
-        out = json.loads(self.objectTemplateString)
-        # out = {"paths":{}, "schema": {}}
-
+        
         name = re.sub('\.\{[^.]*\}$','', obj.name)
+        f_name = "{}{}.json".format(self.folder, name)
+
+        ## check if we already have a file of that name
+        if os.path.isfile(f_name):
+          f = open(f_name, "r")
+          out = json.loads(f.read())
+          f.close()
+        else:
+          ## if not, load template
+          out = json.loads(self.objectTemplateString)
 
         ## add schemas
         out["components"]["schemas"][name] = self.getSchema(name, idx, obj)
-        print("{} {}".format(name, out["components"]["schemas"][name]["events"]))
 
         ## add paths
-        out["paths"] = self.getPaths(name, idx, obj)
+        
+        if out["paths"] == None:
+          out["paths"] = self.getPaths(name, idx, obj)
+        else:
+          out["paths"] = {**out["paths"], **self.getPaths(name, idx, obj)}
+        
         self.json_api_object["paths"][name]["$ref"] = "{}.json#/paths".format(name)
         self.json_api_object["components"]["schemas"].update({name:{"$ref": "{}.json#/components/schemas/{}".format(name, name)}})
         self.writeFile(name, out)
 
     def writeOut(self):
       self.writeFile("api", self.json_api_object)
-      # filepath = "{}{}.json".format(self.folder, "api")
-
-      # f = open(filepath, "w")
-      # f.write(json.dumps(self.json_api_object, indent=2))
-      # f.close()
 
     def build(self):
 

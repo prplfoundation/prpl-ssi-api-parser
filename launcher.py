@@ -154,5 +154,6 @@ class Launcher:
         self._build_json_schema()
 
 if __name__ == '__main__':
-    l = Launcher('specs/input/prpl HL-API (3.6).xlsx')
+    # l = Launcher('specs/input/prpl HL-API (3.8)  short.xlsx')
+    l = Launcher('specs/input/prpl HL-API (3.8).xlsx')
     l.run()
