@@ -284,41 +284,55 @@ class JSONSchemaWriter:
 
       return self.jsonResponses
 
-    def makePathsFromObject(self, object):
-      res = {}
 
-      for pr in object.procedures:
-        try:
-          s_response = json.dumps(json.loads(pr.sample_response))
-        except:
-          s_response = ""
+    def makeRequestBody(self, obj, pr, object):
+
+      if pr.name not in ["Delete", "Get"]:
 
         try:
           s_request = json.dumps(json.loads(pr.sample_request))
         except:
           s_request = ""
+        
+        ref = "#/components/schemas/" + re.sub('\.\{[^.]*\}$','', object.name)
+
+        if pr.name == "List":
+          ref = "#/components/schemas/ListRequest"
+
+        res = {
+                "content":{
+                  "application/json": {
+                    "schema": {
+                      "$ref": ref
+                    },
+                    "example": s_request
+                  }
+                }
+              }
+
+        obj["requestBody"] = res
+
+
+    def makePathsFromObject(self, api_object):
+      res = {}
+
+      for pr in api_object.procedures:
+        try:
+          s_response = json.dumps(json.loads(pr.sample_response))
+        except:
+          s_response = ""
 
         obj = {
-          "operationId": pr.name + object.name,
+          "operationId": pr.name + api_object.name,
           "summary": pr.description,
-          "tags": [object.name],
-          "requestBody": {
-            "content":{
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListRequest"
-                },
-                "example": s_request
-              }
-            }
-          },
+          "tags": [api_object.name],
           "responses": {
             "99": {
               "content": {
                 "application/json":{
                   "example": s_response,
                   "schema": {
-                    "$ref": "#/components/schemas/" + re.sub('\.\{[^.]*\}$','', object.name)
+                    "$ref": "#/components/schemas/" + re.sub('\.\{[^.]*\}$','', api_object.name)
                   }
                 }
               }, 
@@ -326,6 +340,8 @@ class JSONSchemaWriter:
             }
           }
         }
+
+        self.makeRequestBody(obj, pr, api_object)
 
         obj["responses"].update(self.getResponses())
 
@@ -350,10 +366,10 @@ class JSONSchemaWriter:
           }
 
         ## check if we are a sub object path
-        if "{" in object.name:
+        if "{" in api_object.name:
           obj["parameters"] = []
           params_re = re.compile('\{(.*?)\}')
-          params_matches = params_re.findall(object.name)
+          params_matches = params_re.findall(api_object.name)
 
           for p in params_matches:
             new_param = copy.deepcopy(PATH_PARAMETER_TEMPLATE)
