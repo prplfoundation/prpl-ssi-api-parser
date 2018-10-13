@@ -73,50 +73,35 @@ class ExcelReader:
         # Read headers.
         headers = []
 
-        # Iterate trough each column.
-        while True:
-            h = sheet[''.join(cell)].value
+        # run through row iterator
+        for row in sheet.iter_rows():
+          
+          # use first iterator to create headers list
+          if headers == []:
 
-            # Stop reading once and empty cell is found.
-            if h is None:
-                break
+            # iterate over each cell in row
+            for r in range(len(row)):
 
-            headers.append(h)
+              # append cell value to header list
+              headers.append(row[r].value)
+          
+          # if we have the headers, let's parse the rest of the objects
+          else:
 
-            # Jump to next column.
-            cell[0] = chr(ord(cell[0]) + 1)
+            # create empty entry
+            entry = {}
 
-        # Read body.
-        cell = ['A', '2']
+            # iterate over each cell in row
+            for r in range(len(row)):
 
-        # Loop through each row.
-        while True:
-            entry = []
+              # make sure we don't capture empty rows
+              if row[0].value:
 
-            # Loop through each column.
-            for h in headers:
-                value = sheet[''.join(cell)].value
+                # assign value to attribute on entry object named after header
+                entry[headers[r]] = row[r].value
 
-                # Empty cell found, stop parsing.
-                if value is None:
-                    break
-
-                entry.append(value)
-
-                # Jump to next column.
-                cell[0] = chr(ord(cell[0]) + 1)
-            else:
-                # Append procedure as dictionary.
-                p = dict(zip(headers, entry))
-                entries.append(p)
-                self.logger.debug('{} - Parsed entry {}.'.format(name, p))
-
-                # Continue to next line/entry.
-                cell = ['A', str(int(cell[1]) + 1)]
-                continue
-
-            # Empty cell was found, assume end of specification.
-            break
+                # append entry to entries list
+                entries.append(entry)
 
         # Close workbook.
         work_book.close()
