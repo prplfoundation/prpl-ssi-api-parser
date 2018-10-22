@@ -67,9 +67,6 @@ class ExcelReader:
         # Open specified sheet.
         sheet = work_book[name]
 
-        # Start reading at A2.
-        cell = ['A', '1']
-
         # Read headers.
         headers = []
 
@@ -100,8 +97,9 @@ class ExcelReader:
                 # assign value to attribute on entry object named after header
                 entry[headers[r]] = row[r].value
 
-                # append entry to entries list
-                entries.append(entry)
+            if entry != {}:
+              # append entry to entries list
+              entries.append(entry)
 
         # Close workbook.
         work_book.close()

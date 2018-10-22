@@ -84,7 +84,6 @@ class ObjectFactory:
         # Iterate though each field.
         while len(self.fields) > 0:
             f = self.fields[0]
-
             # If current object matches the field object link it.
             if object_name == f['Object'] and procedure_name == f['Procedure']:
                 # Split "Rights" field into "input" and "output" booleans.
@@ -244,7 +243,7 @@ class ObjectFactory:
 
             # Link it to object.
             api_object.procedures.append(api_procedure)
-            self.logger.debug('Procedures - Added procedure "{}".'.format(api_procedure.name))
+            self.logger.debug('Procedures - Added procedure "{}" to "{}".'.format(api_procedure.name, object_name))
 
             # Parse fields and append.
             api_procedure.fields += self._get_fields(object_name, api_procedure.name)
@@ -298,7 +297,7 @@ class ObjectFactory:
             rc = self.response_codes[0]
 
             # Create new response code object instance and append.
-            api_code = HLAPIResponseCode(rc['Name'], rc['Description'], rc['Sample'])
+            api_code = HLAPIResponseCode(rc['Name'], rc['Description'], rc['Sample'], rc['Raised By'])
             codes.append(api_code)
             self.logger.debug('Response Codes - Created response code "{}".'.format(api_code.name))
 
