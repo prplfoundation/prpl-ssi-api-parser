@@ -56,26 +56,26 @@ class JSONSchemaWriter:
         
         # Remove old folder.
         self.logger.debug('File - Removing previous files "{}".'.format(self.folder))
-        # try:
-        shutil.rmtree(self.folder)
-        # except Exception as e:
-            # self.logger.debug("ran into an exception removing old files")
+        try:
+          shutil.rmtree(self.folder)
+        except Exception as e:
+            self.logger.debug("ran into an exception removing old files")
 
         self.logger.debug('File - Finished removing files "{}".'.format(self.folder))
 
         # create new folder
         os.mkdir(self.folder)
 
-
-    def loadBlankJSONAPIObjectFromTemplate(self):
+        # load template into object
         f = open(self.template, "r")
         self.json_api_object = json.loads(f.read())
+        f.close()
 
 ####################################################################
 ################################ SCHEMAS
 ####################################################################
 
-    def makeBaseSchema(self, name, object):
+    def makeBaseSchema(self, name, api_object):
       desc = name + " Object"
       res = {
         "description": desc, 
@@ -84,7 +84,8 @@ class JSONSchemaWriter:
         "required": [],
         "properties": {},
         "events": {},
-        "example": {}
+        "example": {},
+        "layer": api_object.layer
       }
 
       return res 
@@ -117,20 +118,25 @@ class JSONSchemaWriter:
       return res
 
     def getNestedProperty(self, f, res):
-      mainObject = f.name.split(".")[0]
-      newProperty = f.name.split(".")[1]
-
+      mainObject = f.name[:f.name.index(".")]
+      newProperty = f.name[f.name.index(".")+1:]
       if mainObject not in res["properties"]:
+        
         res["properties"][mainObject] = {
           "type": "object",
           "properties": {},
           "required": []
         }
 
-      newF = f
+      ## CULPRIT
+      newF = copy.deepcopy(f)
       newF.name = newProperty
 
-      self.getSimpleProperty(f, res["properties"][mainObject])
+      
+      if "." in newF.name:
+        self.getNestedProperty(newF, res["properties"][mainObject])  
+      else:
+        self.getSimpleProperty(newF, res["properties"][mainObject])
 
     def getSimpleProperty(self, f, res):
       ## check if we have a simple property
@@ -155,8 +161,8 @@ class JSONSchemaWriter:
         if p.name != "List":
 
           for f in p.fields:
-
-            if f.name.count(".") > 0:
+            
+            if "." in f.name:
               self.getNestedProperty(f, res)
             else:
               self.getSimpleProperty(f, res)
@@ -265,10 +271,10 @@ class JSONSchemaWriter:
         
         for r in self.api.response_codes:
 
-          try:
-            r_sample = json.dumps(json.loads(r.sample))
-          except:
-            r_sample = ""
+          # try:
+          r_sample = json.dumps(json.loads(r.sample))
+          # except:
+            # r_sample = ""
 
           self.jsonResponses[r.name] = {
             "content":{
@@ -279,7 +285,8 @@ class JSONSchemaWriter:
                 }
               }
             },
-            "description": r.description,
+            "raised_by": r.raised_by,
+            "description": r.description
           }
 
       return self.jsonResponses
@@ -299,31 +306,57 @@ class JSONSchemaWriter:
         if pr.name == "List":
           ref = "#/components/schemas/ListRequest"
 
+        schema = self.makeSchemaFromProcedureFields(pr, True)
+
         res = {
                 "content":{
                   "application/json": {
-                    "schema": {
-                      "$ref": ref
-                    },
+                    "schema": schema,
                     "example": s_request
                   }
                 }
               }
 
+        # res = {
+        #         "content":{
+        #           "application/json": {
+        #             "schema": {
+        #               "$ref": ref
+        #             },
+        #             "example": s_request
+        #           }
+        #         }
+        #       }
+
         obj["requestBody"] = res
 
 
+    def makeSchemaFromProcedureFields(self, procedure, collect_request_fields):
+      schema = {"properties":{}, "required": []}
+
+      for f in procedure.fields:
+        if (collect_request_fields and f.is_input) or (not collect_request_fields and f.is_output):
+          if "." in f.name:
+            self.getNestedProperty(f, schema)
+            
+          else:
+            self.getSimpleProperty(f, schema)
+
+      return schema
+
     def makePathsFromObject(self, api_object):
       res = {}
-
       for pr in api_object.procedures:
+        
         try:
           s_response = json.dumps(json.loads(pr.sample_response))
         except:
           s_response = ""
 
+        schema = self.makeSchemaFromProcedureFields(pr, False)
+
         obj = {
-          "operationId": pr.name + api_object.name,
+          "operationId": api_object.name + "." + pr.name,
           "summary": pr.description,
           "tags": [api_object.name],
           "responses": {
@@ -331,9 +364,7 @@ class JSONSchemaWriter:
               "content": {
                 "application/json":{
                   "example": s_response,
-                  "schema": {
-                    "$ref": "#/components/schemas/" + re.sub('\.\{[^.]*\}$','', api_object.name)
-                  }
+                  "schema": schema
                 }
               }, 
               "description": "A well-formed call was performed to a valid object with valid arguments."
@@ -379,9 +410,7 @@ class JSONSchemaWriter:
               new_param["schema"] = json.loads(json.dumps(INTEGER_PARAMETER_SCHEMA))
             obj["parameters"].append(new_param)
 
-        ## write procedure to out object
-        res[pr.name] = obj
-
+        res[api_object.name + "." + pr.name] = obj
 
       return res
 
@@ -397,6 +426,44 @@ class JSONSchemaWriter:
 ################################ PATHS EOF
 ####################################################################
 
+####################################################################
+################################ INSTANCES
+####################################################################
+
+    def getInstances(self, obj):
+      res = {}
+
+      for ins in obj.instances:
+        res[ins.name] = {
+          'description': ins.description
+        }
+
+      return res
+
+####################################################################
+################################ INSTANCES EOF
+####################################################################
+
+####################################################################
+################################ VERSIONS
+####################################################################
+
+    def addVersions(self):
+
+      self.json_api_object["versions"] = {}
+
+      for v in self.api.versions:
+        
+        self.json_api_object["versions"][v.number] = {
+          'date': v.date,
+          'changes': v.change_list
+        }
+
+
+####################################################################
+################################ VERSIONS EOF
+####################################################################
+
     def writeFile(self, name, obj):
       filepath = "{}{}.json".format(self.folder, name)
 
@@ -405,8 +472,9 @@ class JSONSchemaWriter:
       f.close()
 
     def createFilesAndPopulateObject(self):
+
       for idx, obj in enumerate(self.api.objects):
-        
+
         name = re.sub('\.\{[^.]*\}$','', obj.name)
         f_name = "{}{}.json".format(self.folder, name)
 
@@ -420,30 +488,34 @@ class JSONSchemaWriter:
           out = json.loads(self.objectTemplateString)
 
         ## add schemas
+        ## TODO: this changes the field.name
         out["components"]["schemas"][name] = self.getSchema(name, idx, obj)
 
         ## add paths
-        
+
         if out["paths"] == None:
           out["paths"] = self.getPaths(name, idx, obj)
         else:
           out["paths"] = {**out["paths"], **self.getPaths(name, idx, obj)}
         
+        if len(obj.instances) > 0:
+          out["instances"] = self.getInstances(obj)
+
         self.json_api_object["paths"][name]["$ref"] = "{}.json#/paths".format(name)
         self.json_api_object["components"]["schemas"].update({name:{"$ref": "{}.json#/components/schemas/{}".format(name, name)}})
         self.writeFile(name, out)
+
+      self.addVersions()
 
     def writeOut(self):
       self.writeFile("api", self.json_api_object)
 
     def build(self):
 
-        ## get template
-        self.loadBlankJSONAPIObjectFromTemplate()
+      ## populate API object
+      self.createFilesAndPopulateObject()
 
-        ## populate API object
-        self.createFilesAndPopulateObject()
+      ## write file
+      self.writeOut()
 
-        ## write file
-        self.writeOut()
-
+# 

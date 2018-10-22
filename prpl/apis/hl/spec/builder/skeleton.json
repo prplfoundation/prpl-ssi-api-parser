@@ -21,6 +21,7 @@
           "Limit": {
             "description": "How many items to return at one time (max 200)",
             "required": false,
+            "type": "integer",
             "schema": {
               "type": "integer",
               "format": "int32",
@@ -33,6 +34,7 @@
           "Offset": {
             "description": "Which object index to start with",
             "required": false,
+            "type": "integer",
             "schema": {
               "type": "integer",
               "format": "int32",

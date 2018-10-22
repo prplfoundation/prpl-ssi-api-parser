@@ -1,17 +1,4 @@
 {
-  "openapi": "3.0.0",
-  "info": {
-    "version": "1.0.0",
-    "title": "prpl Software Stack Independent API",
-    "license": {
-      "name": "ISC"
-    }
-  },
-  "servers": [
-    {
-      "url": "ubus"
-    }
-  ],
   "paths": {
   },
   "components": {
@@ -34,7 +21,7 @@
           "Offset": {
             "description": "Which object index to start with",
             "required": false,
-            "type": "integer",
+            "type": "integer",  
             "schema": {
               "type": "integer",
               "format": "int32",

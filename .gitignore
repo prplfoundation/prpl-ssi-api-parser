@@ -1,4 +1,8 @@
 env/
 *.log
 *.pyc
-specs/generated/json/
+specs/generated/*
+v3.8/*
+out/
+api/
+*.xls*

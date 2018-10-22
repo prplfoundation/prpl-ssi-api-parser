@@ -15,7 +15,7 @@ class ResponseCode:
 
     """
 
-    def __init__(self, name, description, sample):
+    def __init__(self, name, description, sample, raised_by):
         """Creates a new HL-API event.
 
         Args:
@@ -30,6 +30,7 @@ class ResponseCode:
         self.name = name
         self.description = description
         self.sample = sample
+        self.raised_by = raised_by
 
     def __str__(self):
         """Converts object to human-readable string.
