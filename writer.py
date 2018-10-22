@@ -445,7 +445,9 @@ class ExcelWriter:
 
     self.makeTOCSheet(wb)
 
-    wb.save("{}/output.xlsx".format(self.targetFolder))
+    number = max(self.api_json["versions"].keys())
+
+    wb.save("{}/Prpl-SSI-API_v{}.xlsx".format(self.targetFolder, number))
 
 if __name__ == "__main__":
   writer = ExcelWriter("specs/generated/json/v3.8")
