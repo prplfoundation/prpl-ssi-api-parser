@@ -172,11 +172,16 @@ class JSONSchemaWriter:
     def makeEventsFromSchema(self, obj):
       res = {}
 
+
       for ev in obj.events:
+        if ev.sample == "-":
+          sample = ""
+        else:
+          sample = json.dumps(json.loads(ev.sample))
         res[ev.code] = {
           "content": {
             "application/json":{
-              "example": json.dumps(json.loads(ev.sample)),
+              "example": sample,
             }
           },
           "description": ev.description,
