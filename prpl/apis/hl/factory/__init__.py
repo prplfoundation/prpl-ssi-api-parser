@@ -1,4 +1,4 @@
 
-from prpl.apis.hl.factory.object_factory import ObjectFactory
+from prpl.apis.hl.factory.excel_object_factory import ExcelObjectFactory
 
-__all__ = ['ObjectFactory']
+__all__ = ['ExcelObjectFactory']

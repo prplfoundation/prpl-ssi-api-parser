@@ -12,7 +12,7 @@ from prpl.apis.hl.com import Version as HLAPIVersion
 from prpl.apis.hl.com import API as HLAPI
 
 
-class ObjectFactory:
+class ExcelObjectFactory:
     """Generates HL-API Python objects.
 
     Wraps up raw data dictionaries fetched from the 'prpl.apis.hl.spec.parser.ExcelReader' into HL-API Python objects,
@@ -31,10 +31,10 @@ class ObjectFactory:
         instances = parser.get_instances()
 
         # Import Object Factory.
-        from prpl.apis.hl.factory import ObjectFactory as HLAPIObjectFactory
+        from prpl.apis.hl.factory import ExcelObjectFactory as HLAPIObjectFactory
 
         # Link objects.
-        factory = HLAPIObjectFactory(procedures, fields, events, instances)
+        factory = HLAPIExcelObjectFactory(procedures, fields, events, instances)
         objects = factory.get_objects()
 
     """
@@ -60,7 +60,7 @@ class ObjectFactory:
         self.change_log = change_log
         self.objects = []
 
-        self.logger = logging.getLogger('ObjectFactory')
+        self.logger = logging.getLogger('ExcelObjectFactory')
 
     def _get_fields(self, object_name, procedure_name):
         """Generates a list of HL-API Fields based on the specified object and procedure names.

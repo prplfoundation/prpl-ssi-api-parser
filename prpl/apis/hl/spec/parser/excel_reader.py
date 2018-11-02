@@ -3,20 +3,22 @@ from openpyxl import load_workbook
 import os
 import logging
 
+from prpl.apis.hl.factory import ExcelObjectFactory as HLAPIObjectFactory
+
 
 class ExcelReader:
     """Excel Parser for prpl HL-API.
 
     It reads every sheet, namely 'Change-Log', 'Objects', 'Fields', 'Events', 'Response Codes' and 'ToC',
     ands returns its contents as a list of dictionaries, which can then be converted to Python objects
-    with the aid of 'prpl.apis.hl.factory.ObjectFactory'.
+    with the aid of 'prpl.apis.hl.factory.ExcelObjectFactory'.
 
     Example:
         # Import module.
-        from prpl.apis.hl.spec.parser import ExcelReader as HLAPIParser
+        from prpl.apis.hl.spec.parser import ExcelReader as HLAPIExcelParser
 
         # Loads parser with the specification.
-        parser = HLAPIParser('specs/hl-api.xlsx')
+        parser = HLAPIExcelParser('specs/hl-api.xlsx')
 
         # Parse change-log.
         change_log = parser.get_change_log()
@@ -44,6 +46,12 @@ class ExcelReader:
         """
 
         self.spec_path = '{}/{}'.format(os.getcwd(), spec)
+        self.raw_change_log = None
+        self.raw_procedures = None
+        self.raw_fields = None
+        self.raw_response_codes = None
+        self.raw_events = None
+        self.raw_instances = None
 
         self.logger = logging.getLogger('ExcelReader')
 
@@ -223,3 +231,67 @@ class ExcelReader:
         """
 
         return self._parse_sheet('ToC')
+
+    def _build_objects(self):
+        """Builds HL-API objects.
+
+        It converts and links raw-data read from Excel file into HL-API objects.
+
+        """
+
+        logger = logging.getLogger('ObjectFactory')
+
+        # Build objects.
+        logger.info('Building API objects.\n')
+        factory = HLAPIObjectFactory(self.raw_procedures,
+                                     self.raw_fields,
+                                     self.raw_events,
+                                     self.raw_instances,
+                                     self.raw_response_codes,
+                                     self.raw_change_log)
+
+        return factory.get_api()
+        
+
+    def parse(self):
+        """Parses the Excel HL-API specification file.
+
+        It reads all Excel sheets and converts into list of dictionaries.
+
+        """
+        logger = logging.getLogger('ExcelReader')
+
+        # Parse change-log.
+        logger.info('ChangeLog - Parsing started.')
+        self.raw_change_log = self.get_change_log()
+        logger.info('ChangeLog - Parsing finished with {} versions discovered.\n'.format(len(self.raw_change_log)))
+
+        # Parse objects.
+        logger.info('Objects - Parsing started.')
+        self.raw_procedures = self.get_procedures()
+        logger.info('Objects - Parsing finished with {} procedures discovered.\n'.format(len(self.raw_procedures)))
+
+        # Parse fields.
+        logger.info('Fields - Parsing started.')
+        self.raw_fields = self.get_fields()
+        logger.info('Fields - Parsing finished with {} fields discovered.\n'.format(len(self.raw_fields)))
+
+        # Parse response codes.
+        logger.info('Response Codes - Parsing started.')
+        self.raw_response_codes = self.get_response_codes()
+        logger.info('Response Codes - Parsing finished with {} response codes.\n'.format(len(self.raw_response_codes)))
+
+        # Parse events.
+        logger.info('Events - Parsing started.')
+        self.raw_events = self.get_events()
+        logger.info('Events - Parsing finished with {} events.\n'.format(len(self.raw_events)))
+
+        # Parse ToC (instances).
+        logger.info('ToC - Parsing started.')
+        self.raw_instances = self.get_instances()
+        logger.info('ToC - Parsing finished with {} instances.\n'.format(len(self.raw_instances)))
+
+        logger.info('Excel - Parsing finished.\n')
+
+        return self._build_objects()
+

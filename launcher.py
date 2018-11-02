@@ -1,8 +1,7 @@
 
 import logging
 
-from prpl.apis.hl.spec.parser import ExcelReader as HLAPIParser
-from prpl.apis.hl.factory import ObjectFactory as HLAPIObjectFactory
+from prpl.apis.hl.spec.parser import ExcelReader as HLAPIExcelParser
 from prpl.apis.hl.spec.builder import WordWriter as HLAPIWordWriter
 from prpl.apis.hl.spec.builder import JSONSchemaWriter as HLAPIJSONSSchemaWriter
 
@@ -13,7 +12,7 @@ class Launcher:
 
     """
 
-    def __init__(self, spec):
+    def __init__(self, spec, input_format="xls", output_format="json"):
         """Initializes the parser.
 
         By default it enables logging to both console and file.
@@ -24,13 +23,10 @@ class Launcher:
         """
 
         self.specification_file = spec
-        self.raw_change_log = None
-        self.raw_procedures = None
-        self.raw_fields = None
-        self.raw_response_codes = None
-        self.raw_events = None
-        self.raw_instances = None
         self.api = None
+        self.input_format = input_format
+        self.output_format = output_format
+
 
         # Set logging format and level.
         log_level = logging.DEBUG
@@ -51,8 +47,9 @@ class Launcher:
 
         # logging.getLogger().addHandler(console)
 
-    def _parse_excel(self):
-        """Parses the Excel HL-API specification file.
+
+    def _parse_from_excel(self):
+        """Fills the api object with input from an Excel HL-API specification file.
 
         It reads all Excel sheets and converts into list of dictionaries.
 
@@ -62,60 +59,9 @@ class Launcher:
 
         # Load specification.
         logger.info('Excel - Parsing started.\n')
-        parser = HLAPIParser(self.specification_file)
+        parser = HLAPIExcelParser(self.specification_file)
+        self.api = parser.parse()
 
-        # Parse change-log.
-        logger.info('ChangeLog - Parsing started.')
-        self.raw_change_log = parser.get_change_log()
-        logger.info('ChangeLog - Parsing finished with {} versions discovered.\n'.format(len(self.raw_change_log)))
-
-        # Parse objects.
-        logger.info('Objects - Parsing started.')
-        self.raw_procedures = parser.get_procedures()
-        logger.info('Objects - Parsing finished with {} procedures discovered.\n'.format(len(self.raw_procedures)))
-
-        # Parse fields.
-        logger.info('Fields - Parsing started.')
-        self.raw_fields = parser.get_fields()
-        logger.info('Fields - Parsing finished with {} fields discovered.\n'.format(len(self.raw_fields)))
-
-        # Parse response codes.
-        logger.info('Response Codes - Parsing started.')
-        self.raw_response_codes = parser.get_response_codes()
-        logger.info('Response Codes - Parsing finished with {} response codes.\n'.format(len(self.raw_response_codes)))
-
-        # Parse events.
-        logger.info('Events - Parsing started.')
-        self.raw_events = parser.get_events()
-        logger.info('Events - Parsing finished with {} events.\n'.format(len(self.raw_events)))
-
-        # Parse ToC (instances).
-        logger.info('ToC - Parsing started.')
-        self.raw_instances = parser.get_instances()
-        logger.info('ToC - Parsing finished with {} instances.\n'.format(len(self.raw_instances)))
-
-        logger.info('Excel - Parsing finished.\n')
-
-    def _build_objects(self):
-        """Builds HL-API objects.
-
-        It converts and links raw-data read from Excel file into HL-API objects.
-
-        """
-
-        logger = logging.getLogger('ObjectFactory')
-
-        # Build objects.
-        logger.info('Building API objects.\n')
-        factory = HLAPIObjectFactory(self.raw_procedures,
-                                     self.raw_fields,
-                                     self.raw_events,
-                                     self.raw_instances,
-                                     self.raw_response_codes,
-                                     self.raw_change_log)
-
-        self.api = factory.get_api()
-        logger.info('Finished building API {}.\n'.format(self.api))
 
     def _build_word_report(self):
         """Generates a HL-API Specification document in MS Word format."""
@@ -144,14 +90,20 @@ class Launcher:
     def run(self):
         """HL-API main function."""
 
-        self._parse_excel()
-        print("done parsing")
-        self._build_objects()
-        print("done building {}".format(self.api.get_version()))
+        logger = logging.getLogger('Launcher')
 
-        # self._build_word_report()
-        # TODO
-        self._build_json_schema()
+        ## perform input type specific parsing
+        if self.input_format== "xls":
+          self._parse_from_excel()
+        
+        logger.info('Finished building API {}.\n'.format(self.api))
+        print("done parsing")
+
+        if self.output_format == "json":
+          self._build_json_schema()
+        elif self.output_format == "word":
+          self._build_word_report()
+        
 
 if __name__ == '__main__':
     # l = Launcher('specs/input/prpl HL-API (3.8)  short.xlsx')
