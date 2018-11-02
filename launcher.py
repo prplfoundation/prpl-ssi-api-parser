@@ -1,8 +1,16 @@
 
 import logging
 
+
+## TODO: make dynamic
+## readers
 from prpl.apis.hl.spec.parser import ExcelReader as HLAPIExcelParser
+from prpl.apis.hl.spec.parser import JSONReader as HLAPIJSONParser
+
+## TODO: make dynamic
+## writers
 from prpl.apis.hl.spec.builder import WordWriter as HLAPIWordWriter
+from prpl.apis.hl.spec.builder import ExcelWriter as HLAPIExcelWriter
 from prpl.apis.hl.spec.builder import JSONSchemaWriter as HLAPIJSONSSchemaWriter
 
 class Launcher:
@@ -62,6 +70,19 @@ class Launcher:
         parser = HLAPIExcelParser(self.specification_file)
         self.api = parser.parse()
 
+    def _parse_from_json(self):
+        """Fills the api object with input from an Excel HL-API specification file.
+
+        It reads all Excel sheets and converts into list of dictionaries.
+
+        """
+
+        logger = logging.getLogger('JSONReader')
+
+        # Load specification.
+        logger.info('JSON - Parsing started.\n')
+        parser = HLAPIJSONParser(self.specification_file)
+        self.api = parser.parse()
 
     def _build_word_report(self):
         """Generates a HL-API Specification document in MS Word format."""
@@ -87,15 +108,32 @@ class Launcher:
         writer.build()
         logger.info('Word - Finished building file.')
 
+    def _build_excel_file(self):
+        """Generates a HL-API Specification document in MS Word format."""
+
+        logger = logging.getLogger('ExcelWriter')
+
+        # Build objects.
+        logger.info('Excel - Started building file.\n')
+        writer = HLAPIExcelWriter(self.api,
+                                 'specs/generated/')
+        writer.build()
+        logger.info('Excel - Finished building file.')
+
     def run(self):
         """HL-API main function."""
 
         logger = logging.getLogger('Launcher')
 
         ## perform input type specific parsing
-        if self.input_format== "xls":
+        if self.input_format == "xls":
           self._parse_from_excel()
+        elif self.input_format == "json":
+          self._parse_from_json()
         
+        if self.api == None:
+          raise Exception("Error, no API parsed")
+
         logger.info('Finished building API {}.\n'.format(self.api))
         print("done parsing")
 
@@ -103,9 +141,12 @@ class Launcher:
           self._build_json_schema()
         elif self.output_format == "word":
           self._build_word_report()
+        elif self.output_format == "xls":
+          self._build_excel_file()
         
 
 if __name__ == '__main__':
     # l = Launcher('specs/input/prpl HL-API (3.8)  short.xlsx')
-    l = Launcher('specs/input/prpl HL-API (3.8).xlsx')
+    # l = Launcher('specs/input/prpl HL-API (3.8).xlsx')
+    l = Launcher('specs/generated/json/v3.8', input_format="json", output_format="xls")
     l.run()

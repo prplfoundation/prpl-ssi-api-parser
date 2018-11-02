@@ -158,7 +158,7 @@ class ExcelObjectFactory:
 
             # If the current object matches the event object, link it.
             if object_name == e['Object']:
-                api_event = HLAPIEvent(e['Code'], e['Name'], e['Description'], e['Sample'])
+                api_event = HLAPIEvent(e['Code'], e['Name'], e['Description'], e['Parameters'])
                 events.append(api_event)
                 self.logger.debug('Events - Added event "{}".'.format(api_event.name))
 
@@ -226,6 +226,7 @@ class ExcelObjectFactory:
             # If the object differs from the last parsed, crease a new instance.
             if len(self.objects) == 0 or object_name != self.objects[-1].name:
                     # Create new API Object.
+                    self.logger.debug(p['Resource'])
                     api_object = HLAPIObject(p['Layer'], p['Object'], p['Resource'])
 
                     # Append to list.
