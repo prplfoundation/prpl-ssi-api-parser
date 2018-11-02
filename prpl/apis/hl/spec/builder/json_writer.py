@@ -64,7 +64,7 @@ class JSONSchemaWriter:
         self.logger.debug('File - Finished removing files "{}".'.format(self.folder))
 
         # create new folder
-        os.mkdir(self.folder)
+        os.makedirs(self.folder)
 
         # load template into object
         f = open(self.template, "r")
