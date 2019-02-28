@@ -1,0 +1,12 @@
+# Python cache files
+__pycache__/
+*.pyc
+
+# PyCharm
+*.idea
+
+# Logs
+*.log
+
+# Generated specs
+specs/generated/*
