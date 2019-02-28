@@ -10,3 +10,4 @@ __pycache__/
 
 # Generated specs
 specs/generated/*
+specs/input/prpl*.xlsx
