@@ -175,24 +175,34 @@ class ExcelReader:
         return change_log
 
     def get_procedures(self):
-        """Parses the 'Object' Excel sheet and returns a list of HL-API objects and procedures.
+        """Parses the 'Objects & Methods' Excel sheet and returns a list of HL-API objects and procedures.
 
         Returns:
             list<dict>: Array of API objects and procedures.
 
         """
 
-        return self._parse_sheet('Objects')
+        return self._parse_sheet('Objects & Methods')
 
-    def get_fields(self):
-        """Parses the 'Fields' Excel sheet and returns as list of HL-API fields.
+    def get_parameters(self):
+        """Parses the 'Parameters' Excel sheet and returns as list of HL-API fields.
 
         Returns:
             list<dict>: Array of API fields.
 
         """
 
-        return self._parse_sheet('Fields')
+        return self._parse_sheet('Parameters')
+
+    def get_data_types(self):
+        """Parses the 'Data Types' Excel sheet and returns as list of HL-API fields.
+
+        Returns:
+            list<dict>: Array of API fields.
+
+        """
+
+        return self._parse_sheet('Data Types')
 
     def get_response_codes(self):
         """Parses the 'Response Codes' Excel sheet and returns as list of HL-API return codes.

@@ -39,12 +39,12 @@ class ObjectFactory:
 
     """
 
-    def __init__(self, procedures, fields, events, instances, response_codes, change_log):
+    def __init__(self, procedures, parameters, data_types, events, instances, response_codes, change_log):
         """Initializes the HL-API Object factory.
 
         Args:
             procedures (list<dict>): Array of raw procedures to be parsed and linked.
-            fields (list<dict>): Array of raw fields to be parsed and linked.
+            parameters (list<dict>): Array of raw fields to be parsed and linked.
             events (list<dict>): Array of raw events to be parsed and linked.
             instances (list<dict>): Array of object instances to be parsed and linked.
             response_codes (list<dict>): Array of response codes to be parsed.
@@ -52,8 +52,9 @@ class ObjectFactory:
 
         """
 
-        self.procedures = sorted(procedures, key=itemgetter('Layer', 'Object', 'Procedure'))
-        self.fields = sorted(fields, key=itemgetter('Layer', 'Object', 'Procedure', 'Field'))
+        self.procedures = sorted(procedures, key=itemgetter('Layer', 'Object', 'Method'))
+        self.parameters = sorted(parameters, key=itemgetter('Layer', 'Object', 'Method', 'Parameter'))
+        self.data_types = sorted(data_types, key=itemgetter('HL-API', 'uBus'))
         self.events = sorted(events, key=itemgetter('Layer', 'Object', 'Code'))
         self.instances = sorted(instances, key=itemgetter('Layer', 'Object', 'Instance'))
         self.response_codes = sorted(response_codes, key=itemgetter('Name'))
@@ -62,11 +63,11 @@ class ObjectFactory:
 
         self.logger = logging.getLogger('ObjectFactory')
 
-    def _get_fields(self, object_name, procedure_name):
-        """Generates a list of HL-API Fields based on the specified object and procedure names.
+    def _get_parameters(self, object_name, procedure_name):
+        """Generates a list of HL-API Parameter based on the specified object and procedure names.
 
-        For optimal performance, this method assumes that 'self.fields' is sorted by object name (ascending).
-        Once a field which does not match the object and procedure name is found it returns without processing
+        For optimal performance, this method assumes that 'self.parameter' is sorted by object name (ascending).
+        Once a paramete which does not match the object and procedure name is found it returns without processing
         all entries.
 
         Args:
@@ -79,13 +80,13 @@ class ObjectFactory:
         """
 
         # Init fields array.
-        fields = []
+        parameters = []
 
         # Iterate though each field.
-        while len(self.fields) > 0:
-            f = self.fields[0]
+        while len(self.parameters) > 0:
+            f = self.parameters[0]
             # If current object matches the field object link it.
-            if object_name == f['Object'] and procedure_name == f['Procedure']:
+            if object_name == f['Object'] and procedure_name == f['Method']:
                 # Split "Rights" field into "input" and "output" booleans.
                 rights = f['Rights']
 
@@ -111,8 +112,8 @@ class ObjectFactory:
                                     'procedure="{}", field="{}".'.format(f['Object'], f['Procedure'], f['Field']))
 
                 # Create new API Field.
-                api_field = HLAPIField(
-                    f['Field'],
+                api_parameters = HLAPIField(
+                    f['Parameter'],
                     f['Description'],
                     f['Type'],
                     is_input,
@@ -124,16 +125,16 @@ class ObjectFactory:
                     f['Notes'])
 
                 # Link field to procedure.
-                fields.append(api_field)
-                self.logger.debug('Fields - Added field "{}" ({}).'.format(api_field.name, api_field.type))
+                parameters.append(api_parameters)
+                self.logger.debug('Fields - Added field "{}" ({}).'.format(api_parameters.name, api_parameters.type))
 
                 # Delete the already parsed field from list to speed up the following lookup process.
-                del self.fields[0]
+                del self.parameters[0]
             else:
                 # Exit loop to continue on to the next object.
                 break
 
-        return fields
+        return parameters
 
     def _get_events(self, object_name):
         """Generates a list of HL-API Events based on the specified object names.
@@ -239,14 +240,14 @@ class ObjectFactory:
                     api_object.instances += self._get_instances(object_name)
 
             # Create new procedure.
-            api_procedure = HLAPIProcedure(p['Procedure'], p['Description'], p['Arguments'], p['Sample'])
+            api_procedure = HLAPIProcedure(p['Method'], p['Description'], p['Request Body (Sample)'], p['Response Body (Sample)'])
 
             # Link it to object.
             api_object.procedures.append(api_procedure)
             self.logger.debug('Procedures - Added procedure "{}" to "{}".'.format(api_procedure.name, object_name))
 
             # Parse fields and append.
-            api_procedure.fields += self._get_fields(object_name, api_procedure.name)
+            api_procedure.parameters += self._get_parameters(object_name, api_procedure.name)
 
             # Delete the already parsed procedure from list to speed up the following lookup process.
             del self.procedures[0]
@@ -254,11 +255,11 @@ class ObjectFactory:
         self.logger.debug('Objects - All objects and procedures have been successfully linked.')
 
         # Validate if all fields have been parsed.
-        if len(self.fields) > 0:
+        if len(self.parameters) > 0:
             raise Exception('Field "{}" on object "{}" procedure "{}" could not be linked. '
-                            'Please review the spec for errors.'.format(self.fields[0]['Field'],
-                                                                        self.fields[0]['Object'],
-                                                                        self.fields[0]['Procedure']))
+                            'Please review the spec for errors.'.format(self.parameters[0]['Parameter'],
+                                                                        self.parameters[0]['Object'],
+                                                                        self.parameters[0]['Method']))
 
         self.logger.debug('Fields - All fields have been successfully linked.')
 

@@ -69,20 +69,20 @@ class Launcher:
         self.raw_change_log = parser.get_change_log()
         logger.info('ChangeLog - Parsing finished with {} versions discovered.\n'.format(len(self.raw_change_log)))
 
-        # Parse objects.
+        # Parse objects & methods.
         logger.info('Objects - Parsing started.')
         self.raw_procedures = parser.get_procedures()
         logger.info('Objects - Parsing finished with {} procedures discovered.\n'.format(len(self.raw_procedures)))
 
-        # Parse fields.
-        logger.info('Fields - Parsing started.')
-        self.raw_fields = parser.get_fields()
-        logger.info('Fields - Parsing finished with {} fields discovered.\n'.format(len(self.raw_fields)))
+        # Parse Parameters.
+        logger.info('Parameters - Parsing started.')
+        self.raw_parameters = parser.get_parameters()
+        logger.info('Parameters - Parsing finished with {} fields discovered.\n'.format(len(self.raw_parameters)))
 
-        # Parse response codes.
-        logger.info('Response Codes - Parsing started.')
-        self.raw_response_codes = parser.get_response_codes()
-        logger.info('Response Codes - Parsing finished with {} response codes.\n'.format(len(self.raw_response_codes)))
+        # Parse Data Types
+        logger.info('Data Types - Parsing started.')
+        self.raw_data_types = parser.get_data_types()
+        logger.info('Data Types - Parsing finished with {} fields discovered.\n'.format(len(self.raw_data_types)))
 
         # Parse events.
         logger.info('Events - Parsing started.')
@@ -93,6 +93,11 @@ class Launcher:
         logger.info('ToC - Parsing started.')
         self.raw_instances = parser.get_instances()
         logger.info('ToC - Parsing finished with {} instances.\n'.format(len(self.raw_instances)))
+
+        # Parse Response Codes.
+        logger.info('Response Codes - Parsing started.')
+        self.raw_response_codes = parser.get_response_codes()
+        logger.info('Response Codes - Parsing finished with {} response codes.\n'.format(len(self.raw_response_codes)))
 
         logger.info('Excel - Parsing finished.\n')
 
@@ -108,7 +113,8 @@ class Launcher:
         # Build objects.
         logger.info('Building API objects.\n')
         factory = HLAPIObjectFactory(self.raw_procedures,
-                                     self.raw_fields,
+                                     self.raw_parameters,
+                                     self.raw_data_types,
                                      self.raw_events,
                                      self.raw_instances,
                                      self.raw_response_codes,
@@ -153,7 +159,8 @@ class Launcher:
         # TODO
         self._build_json_schema()
 
+
 if __name__ == '__main__':
     # l = Launcher('specs/input/prpl HL-API (3.8)  short.xlsx')
-    l = Launcher('specs/input/prpl HL-API (3.8).xlsx')
+    l = Launcher('specs/input/prpl HL-API (3.8.2).xlsx')
     l.run()

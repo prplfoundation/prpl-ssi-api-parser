@@ -160,7 +160,7 @@ class JSONSchemaWriter:
 
         if p.name != "List":
 
-          for f in p.fields:
+          for f in p.parameters:
             
             if "." in f.name:
               self.getNestedProperty(f, res)
@@ -306,7 +306,7 @@ class JSONSchemaWriter:
         if pr.name == "List":
           ref = "#/components/schemas/ListRequest"
 
-        schema = self.makeSchemaFromProcedureFields(pr, True)
+        schema = self.makeSchemaFromProcedureParameters(pr, True)
 
         res = {
                 "content":{
@@ -331,11 +331,11 @@ class JSONSchemaWriter:
         obj["requestBody"] = res
 
 
-    def makeSchemaFromProcedureFields(self, procedure, collect_request_fields):
+    def makeSchemaFromProcedureParameters(self, procedure, collect_request_parameters):
       schema = {"properties":{}, "required": []}
 
-      for f in procedure.fields:
-        if (collect_request_fields and f.is_input) or (not collect_request_fields and f.is_output):
+      for f in procedure.parameters:
+        if (collect_request_parameters and f.is_input) or (not collect_request_parameters and f.is_output):
           if "." in f.name:
             self.getNestedProperty(f, schema)
             
@@ -353,7 +353,7 @@ class JSONSchemaWriter:
         except:
           s_response = ""
 
-        schema = self.makeSchemaFromProcedureFields(pr, False)
+        schema = self.makeSchemaFromProcedureParameters(pr, False)
 
         obj = {
           "operationId": api_object.name + "." + pr.name,

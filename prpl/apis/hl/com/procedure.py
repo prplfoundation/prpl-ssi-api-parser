@@ -47,7 +47,7 @@ class Procedure:
         self.description = description
         self.sample_request = sample_request
         self.sample_response = sample_response
-        self.fields = []
+        self.parameters = []
 
     def __str__(self):
         """Converts object to human-readable string.
