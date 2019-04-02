@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "Header": {
+      "type": "Object",
+      "description": "Header object specifying the name of the response type and providing a detailed description in case of an error",
+      "properties": {
+        "Name": {
+          "type": "String",
+          "description": "name of the response type",
+        },
+        "Description": {
+          "type": "String",
+          "description": "A more detailed error message. NOTE: only filled in when the operation returns an error.",
+        }
+      },
+      "required": ["name"]
+    },
+    "Body": {
+      "type": "Object",
+      "description": "The object holding all returned properties. Note: in case of an error, the body property does not exist.",
+      "properties": {
+      },
+      "required": []
+    }
+  },
+  "required": ["Header", "Body"]
+}
+
+// "{\"Header\": {\"Name\": \"OK\"}, \"Body\": {\"Id\": \"WAN_Mobile\"}}"

@@ -148,14 +148,18 @@ class JSONObjectFactory:
 
     def _get_field(self, fields, property_name, property_values, is_input, is_output, required_list):
 
-        # check if we are dealing with a nested object
-        if property_values["type"] == "object":
+        # print(property_values)
+				# check if we are dealing with a nested object
+        if "properties" in property_values.keys() or property_values["type"] == "object":
 
             # if so, iterate through sub objects
             for sp_name in list(property_values["properties"].keys()):
                 
                 # create new name
-                combined_name = "{}.{}".format(property_name, sp_name)
+                if property_name != "Body":
+                  combined_name = "{}.{}".format(property_name, sp_name)
+                else:
+                  combined_name = sp_name
 
                 # recursively call this function
                 self._get_field(fields, combined_name, property_values["properties"][sp_name], is_input, is_output, property_values["required"])
@@ -234,7 +238,7 @@ class JSONObjectFactory:
                 self._get_field(fields, property_name, property_values, is_input, is_output, path_schema["requestBody"]["content"]["application/json"]["schema"]["required"])
         # check response with code 99 and add fields from schema
         # iterate over each property and add accordingly
-        for property_name, property_values in path_schema["responses"]["99"]["content"]["application/json"]["schema"]["properties"].items():
+        for property_name, property_values in path_schema["responses"]["99"]["content"]["application/json"]["schema"]["allOf"][1]["properties"].items():
 
             ## for easier reading this is initialized up here
             is_input = False
@@ -243,7 +247,7 @@ class JSONObjectFactory:
             ## check if we already have an input parameter with the same name
             ## if not, create a completely new field
             if not property_name in fields.keys():
-                self._get_field(fields, property_name, property_values, is_input, is_output, path_schema["responses"]["99"]["content"]["application/json"]["schema"]["required"])
+                self._get_field(fields, property_name, property_values, is_input, is_output, path_schema["responses"]["99"]["content"]["application/json"]["schema"]["allOf"][1]["properties"]["Body"]["required"])
             else:
                 ## if yes, update existing field 
                 ## set field to also be an output field

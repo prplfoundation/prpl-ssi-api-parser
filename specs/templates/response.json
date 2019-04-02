@@ -1,0 +1,58 @@
+{
+  "type": "object",
+  "description": "schema for a responses to object methods",
+  "oneOf": [
+    {
+      "properties": {
+        "Header": {
+          "type": "object",
+          "description": "Header object specifying the name of the response type and providing a detailed description in case of an error",
+          "properties": {
+            "Name": {
+              "type": "string",
+              "description": "name of the response type",
+              "enum": [
+                "OK"
+              ]
+            }
+          },
+          "required": [
+            "Name"
+          ],
+          "additionalProperties": false
+        },
+        "Body": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "Header": {
+          "type": "object",
+          "description": "Header object specifying the name of the response type and providing a detailed description in case of an error",
+          "properties": {
+            "Name": {
+              "type": "string",
+              "description": "name of the response type",
+              "enum": [
+                "lala"
+              ]
+            },
+            "Description": {
+              "type": "string",
+              "description": "A more detailed error message. NOTE: only filled in when the operation returns an error."
+            }
+          },
+          "required": [
+            "Name",
+            "Description"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

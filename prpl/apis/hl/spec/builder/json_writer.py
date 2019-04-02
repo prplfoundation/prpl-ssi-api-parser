@@ -5,6 +5,7 @@ import shutil
 import re
 from collections import OrderedDict
 import json
+from json import JSONDecodeError
 import copy
 
 PATH_PARAMETER_TEMPLATE = {
@@ -24,12 +25,19 @@ INTEGER_PARAMETER_SCHEMA = {
   }
 }
 
+import logging 
+stream_handler = logging.StreamHandler() 
+stream_handler.setFormatter(logging.Formatter('%(asctime)s :: %(levelname)s :: %(name)s :: %(message)s')) 
+log = logging.getLogger(__name__) 
+log.addHandler(stream_handler) 
+log.setLevel(logging.INFO)
+
 class JSONSchemaWriter:
     """JSONSchema specification writer for prpl HL-API.
 
     """
 
-    def __init__(self, api, folder, template='specs/templates/prpl.json', object_template='specs/templates/object.json'):
+    def __init__(self, api, folder, template='specs/templates/prpl.json', object_template='specs/templates/object.json', response_schema_template='specs/templates/response.json'):
         """Initializes the specification writer.
 
         Args:
@@ -41,6 +49,9 @@ class JSONSchemaWriter:
         self.api = api
         self.folder = folder
         self.template = template
+        rstf = open(response_schema_template, "r")
+        self.response_schema_template_string =  rstf.read()
+        rstf.close()
         
         f = open(object_template, "r")
         self.objectTemplateString = f.read()
@@ -70,6 +81,10 @@ class JSONSchemaWriter:
         f = open(self.template, "r")
         self.json_api_object = json.loads(f.read())
         f.close()
+
+        self.objects_only = False
+
+
 
 ####################################################################
 ################################ SCHEMAS
@@ -177,14 +192,14 @@ class JSONSchemaWriter:
           sample = ""
         else:
           sample = json.dumps(json.loads(ev.sample))
-        res[ev.code] = {
+        res[ev.name] = {
           "content": {
             "application/json":{
               "example": sample,
             }
           },
           "description": ev.description,
-          "code": ev.name
+          "code": ev.code
         }
 
       return res
@@ -242,7 +257,7 @@ class JSONSchemaWriter:
         schemas = json.loads(self.objectTemplateString)
 
       if not name in schemas.keys():
-        res = self.makeBaseSchema(name, obj)   
+        res = self.makeBaseSchema(name, obj)
       else:
         res = schemas[name]
 
@@ -260,6 +275,15 @@ class JSONSchemaWriter:
 
       return res
 
+    def fillResponseSchema(self, out):
+      for r in self.api.response_codes:
+
+        name_set = list(set(out["components"]["schemas"]["Response"]["oneOf"][1]["properties"]["Header"]["properties"]["Name"]["enum"]))
+        name_set.append(r.name)
+        out["components"]["schemas"]["Response"]["oneOf"][1]["properties"]["Header"]["properties"]["Name"]["enum"] = list(set(name_set))
+
+      return out
+
 ####################################################################
 ################################ SCHEMAS EOF
 ####################################################################
@@ -275,22 +299,23 @@ class JSONSchemaWriter:
         
         for r in self.api.response_codes:
 
-          # try:
-          r_sample = json.dumps(json.loads(r.sample))
-          # except:
-            # r_sample = ""
+          try:
+            r_sample = json.dumps(json.loads(r.sample))
+          except JSONDecodeError as e:
+            log.info('Running fun_test ! {}\n{}'.format(e, r.sample))
+            print("error ")
 
           self.jsonResponses[r.name] = {
+            "description": r.description,
+            "raised_by": r.raised_by,
             "content":{
               "application/json": {
                 "example": r_sample,
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/Response"
                 }
               }
-            },
-            "raised_by": r.raised_by,
-            "description": r.description
+            }            
           }
 
       return self.jsonResponses
@@ -362,23 +387,24 @@ class JSONSchemaWriter:
         obj = {
           "operationId": api_object.name + "." + pr.name,
           "summary": pr.description,
-          "tags": [api_object.name],
-          "responses": {
-            "99": {
-              "content": {
-                "application/json":{
-                  "example": s_response,
-                  "schema": schema
-                }
-              }, 
-              "description": "A well-formed call was performed to a valid object with valid arguments."
-            }
-          }
+          "tags": [api_object.name]
         }
 
-        self.makeRequestBody(obj, pr, api_object)
+        obj["responses"] = self.getResponses()
 
-        obj["responses"].update(self.getResponses())
+        obj["responses"]["OK"]["content"]["application/json"]["example"] = s_response
+        obj["responses"]["OK"]["content"]["application/json"]["schema"] = {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Response"},
+                      {
+                        "properties": {
+                          "Body": schema
+                        }
+                      }
+                    ]
+                  }
+
+        self.makeRequestBody(obj, pr, api_object)
 
         if pr.name == "List":
           obj["schema"] = {
@@ -477,6 +503,9 @@ class JSONSchemaWriter:
 
     def createFilesAndPopulateObject(self):
 
+      if (self.objects_only):
+        object_schemas = {}
+
       for idx, obj in enumerate(self.api.objects):
 
         name = re.sub('\.\{[^.]*\}$','', obj.name)
@@ -494,7 +523,9 @@ class JSONSchemaWriter:
         ## add schemas
         ## TODO: this changes the field.name
         out["components"]["schemas"][name] = self.getSchema(name, idx, obj)
-
+        if (self.objects_only):
+          object_schemas[name] = json.loads(json.dumps(out["components"]["schemas"][name]))
+        out = self.fillResponseSchema(out)
         ## add paths
 
         if out["paths"] == None:
@@ -508,6 +539,16 @@ class JSONSchemaWriter:
         self.json_api_object["paths"][name]["$ref"] = "{}.json#/paths".format(name)
         self.json_api_object["components"]["schemas"].update({name:{"$ref": "{}.json#/components/schemas/{}".format(name, name)}})
         self.writeFile(name, out)
+
+        if (self.objects_only):
+          f = open(self.template, "r")
+          objects_only = json.loads(f.read())
+          f.close()
+
+          del objects_only["components"]["schemas"]["ListRequest"]
+          objects_only["components"]["schemas"] = object_schemas
+
+          self.writeFile("objects_only", objects_only)
 
       self.addVersions()
 

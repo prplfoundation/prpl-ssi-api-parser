@@ -52,8 +52,8 @@ class ExcelObjectFactory:
 
         """
 
-        self.procedures = sorted(procedures, key=itemgetter('Layer', 'Object', 'Procedure'))
-        self.fields = sorted(fields, key=itemgetter('Layer', 'Object', 'Procedure', 'Field'))
+        self.procedures = sorted(procedures, key=itemgetter('Layer', 'Object', 'Method'))
+        self.fields = sorted(fields, key=itemgetter('Layer', 'Object', 'Method', 'Parameter'))
         self.events = sorted(events, key=itemgetter('Layer', 'Object', 'Code'))
         self.instances = sorted(instances, key=itemgetter('Layer', 'Object', 'Instance'))
         self.response_codes = sorted(response_codes, key=itemgetter('Name'))
@@ -85,7 +85,7 @@ class ExcelObjectFactory:
         while len(self.fields) > 0:
             f = self.fields[0]
             # If current object matches the field object link it.
-            if object_name == f['Object'] and procedure_name == f['Procedure']:
+            if object_name == f['Object'] and procedure_name == f['Method']:
                 # Split "Rights" field into "input" and "output" booleans.
                 rights = f['Rights']
 
@@ -108,11 +108,11 @@ class ExcelObjectFactory:
                 elif is_input is True:
                     # Raise event in case and input field is detected without the required flag.
                     raise Exception('Detected input field without required flag descriptor (object="{}",'
-                                    'procedure="{}", field="{}".'.format(f['Object'], f['Procedure'], f['Field']))
+                                    'procedure="{}", field="{}".'.format(f['Object'], f['Method'], f['Parameter']))
 
                 # Create new API Field.
                 api_field = HLAPIField(
-                    f['Field'],
+                    f['Parameter'],
                     f['Description'],
                     f['Type'],
                     is_input,
@@ -240,7 +240,7 @@ class ExcelObjectFactory:
                     api_object.instances += self._get_instances(object_name)
 
             # Create new procedure.
-            api_procedure = HLAPIProcedure(p['Procedure'], p['Description'], p['Arguments'], p['Sample'])
+            api_procedure = HLAPIProcedure(p['Method'], p['Description'], p['Response Body (Parameters)'], p['Response Body (Sample)'])
 
             # Link it to object.
             api_object.procedures.append(api_procedure)

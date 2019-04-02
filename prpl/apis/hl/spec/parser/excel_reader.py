@@ -190,7 +190,7 @@ class ExcelReader:
 
         """
 
-        return self._parse_sheet('Objects')
+        return self._parse_sheet('Objects & Methods')
 
     def get_fields(self):
         """Parses the 'Fields' Excel sheet and returns as list of HL-API fields.
@@ -200,7 +200,7 @@ class ExcelReader:
 
         """
 
-        return self._parse_sheet('Fields')
+        return self._parse_sheet('Parameters')
 
     def get_response_codes(self):
         """Parses the 'Response Codes' Excel sheet and returns as list of HL-API return codes.

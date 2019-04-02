@@ -4,7 +4,7 @@ install:
 	pip3 install -r requirements.txt
 
 test:
-	nose2-3.5
+	nose2
 
 clean:
 	rm -f -r .idea

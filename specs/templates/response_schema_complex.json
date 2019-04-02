@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "properties": {
+    "Header": {
+      "type": "object",
+      "description": "Header object specifying the name of the response type and providing a detailed description in case of an error",
+      "properties": {
+        "Name": {
+          "type": "string",
+          "description": "name of the response type",
+          "enum": [
+            "OK",
+            "Error"
+          ]
+        }
+      },
+      "required": [
+        "Name"
+      ],
+      "if": {
+        "not": {
+          "properties": {
+            "Name": {
+              "enum": [
+                "OK"
+              ]
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "Description"
+        ],
+        "properties": {
+          "Description": {
+            "type": "string",
+            "description": "A more detailed error message. NOTE: only filled in when the operation returns an error."
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "Header"
+  ],
+  "if": {
+    "properties": {
+      "Header": {
+        "properties": {
+          "Name": {
+            "enum": [
+              "OK"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "Body"
+    ],
+    "properties": {
+      "Body": {
+        "type": "object",
+        "description": "The object holding all returned properties. Note: in case of an error, the body property does not exist.",
+        "properties": {
+          "Id": {
+            "type": "string",
+            "description": "IP Interface unique identifier.",
+            "format": "1 up to 64 chars",
+            "default_value": "Integer starting at 0",
+            "possible_values": "any string with length from 1 up to 64 chars"
+          }
+        },
+        "required": [
+          "Id"
+        ]
+      }
+    }
+  }
+}
