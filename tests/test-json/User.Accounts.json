@@ -1,0 +1,177 @@
+{
+  "paths": {
+    "User.Accounts.{AccountId}.Set": {
+      "operationId": "User.Accounts.{AccountId}.Set",
+      "summary": "Modifies the account.",
+      "tags": [
+        "User.Accounts.{AccountId}"
+      ],
+      "responses": {
+        "OK": {
+          "description": "A well-formed call was performed and successfully processed.",
+          "raised_by": "",
+          "content": {
+            "application/json": {
+              "example": "{\"Header\": {\"Code\": 0, \"Name\": \"OK\"}}",
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Response"
+                  },
+                  {
+                    "properties": {
+                      "Body": {
+                        "properties": {},
+                        "required": []
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {},
+              "required": []
+            },
+            "example": "{\"Name\": \"Admin\"}"
+          }
+        }
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "AccountId",
+          "type": "integer",
+          "required": true,
+          "description": "ID of a(n) Account",
+          "schema": {
+            "type": "integer",
+            "format": "int32",
+            "default": 20,
+            "example": {
+              "Limit": 10
+            }
+          }
+        }
+      ]
+    }
+  },
+  "components": {
+    "schemas": {
+      "ListRequest": {
+        "properties": {
+          "Limit": {
+            "description": "How many items to return at one time (max 200)",
+            "required": false,
+            "type": "integer",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "example": {
+                "Limit": 10
+              }
+            }
+          },
+          "Offset": {
+            "description": "Which object index to start with",
+            "required": false,
+            "type": "integer",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "example": {
+                "Offset": 45
+              }
+            }
+          }
+        }
+      },
+      "Response": {
+        "type": "object",
+        "description": "schema for a responses to object methods",
+        "oneOf": [
+          {
+            "properties": {
+              "Header": {
+                "type": "object",
+                "description": "Header object specifying the name of the response type and providing a detailed description in case of an error",
+                "properties": {
+                  "Name": {
+                    "type": "string",
+                    "description": "name of the response type",
+                    "enum": [
+                      "OK"
+                    ]
+                  }
+                },
+                "required": [
+                  "Name"
+                ],
+                "additionalProperties": false
+              },
+              "Body": {
+                "type": "object"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "properties": {
+              "Header": {
+                "type": "object",
+                "description": "Header object specifying the name of the response type and providing a detailed description in case of an error",
+                "properties": {
+                  "Name": {
+                    "type": "string",
+                    "description": "name of the response type",
+                    "enum": [
+                      "OK"
+                    ]
+                  },
+                  "Description": {
+                    "type": "string",
+                    "description": "A more detailed error message. NOTE: only filled in when the operation returns an error."
+                  }
+                },
+                "required": [
+                  "Name",
+                  "Description"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "User.Accounts": {
+        "description": "User.Accounts Object",
+        "id": "User.Accounts",
+        "type": "object",
+        "required": [],
+        "properties": {},
+        "events": {
+          "USER_ACCOUNTS_ADDED": {
+            "content": {
+              "application/json": {
+                "example": "{\"Header\": {\"Code\": 1, \"Name\": \"USER_ACCOUNTS_ADDED\"}, \"Body\": {\"AccountId\": \"User.Accounts.2\"}}"
+              }
+            },
+            "description": "Raised when a new account is added.",
+            "code": "0"
+          }
+        },
+        "example": {},
+        "layer": 1
+      }
+    }
+  }
+}
