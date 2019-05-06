@@ -29,7 +29,7 @@ class JSONSchemaWriter:
 
     """
 
-    def __init__(self, api, folder, template='specs/templates/prpl.json', object_template='specs/templates/object.json'):
+    def __init__(self, api, folder, template='/root/PycharmProjects/prpl-ssi-api-parser/specs/templates/prpl.json', object_template='/root/PycharmProjects/prpl-ssi-api-parser/specs/templates/object.json'):
         """Initializes the specification writer.
 
         Args:

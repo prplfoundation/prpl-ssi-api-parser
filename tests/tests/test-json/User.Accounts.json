@@ -1,0 +1,138 @@
+{
+  "paths": {
+    "User.Accounts.{AccountId}.Set": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "example": "{\"Name\": \"Admin\"}",
+            "schema": {
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "description": "ID of a(n) Account",
+          "required": true,
+          "type": "integer",
+          "schema": {
+            "example": {
+              "Limit": 10
+            },
+            "format": "int32",
+            "default": 20,
+            "type": "integer"
+          },
+          "name": "AccountId",
+          "in": "path"
+        }
+      ],
+      "summary": "Modifies the account.",
+      "tags": [
+        "User.Accounts.{AccountId}"
+      ],
+      "operationId": "User.Accounts.{AccountId}.Set",
+      "responses": {
+        "OK": {
+          "description": "A well-formed call was performed and successfully processed.",
+          "raised_by": "",
+          "content": {
+            "application/json": {
+              "example": "{\"Body\": {\"Name\": \"Guest\", \"Id\": 0}, \"Header\": {\"Code\": 0, \"Name\": \"OK\"}}",
+              "schema": {
+                "$ref": "#/components/schemas/Error"
+              }
+            }
+          }
+        },
+        "99": {
+          "description": "A well-formed call was performed to a valid object with valid arguments.",
+          "content": {
+            "application/json": {
+              "example": "{\"Header\": {\"Code\": 0, \"Name\": \"OK\"}}",
+              "schema": {
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User.Accounts": {
+        "description": "User.Accounts Object",
+        "id": "User.Accounts",
+        "properties": {},
+        "type": "object",
+        "events": {
+          "0": {
+            "description": "Raised when a new account is added.",
+            "code": "USER_ACCOUNTS_ADDED",
+            "content": {
+              "application/json": {
+                "example": "{\"Body\": {\"AccountId\": \"User.Accounts.2\"}, \"Header\": {\"Code\": 1, \"Name\": \"USER_ACCOUNTS_ADDED\"}}"
+              }
+            }
+          }
+        },
+        "layer": 1,
+        "required": [],
+        "example": {}
+      },
+      "ListRequest": {
+        "properties": {
+          "Limit": {
+            "description": "How many items to return at one time (max 200)",
+            "type": "integer",
+            "required": false,
+            "schema": {
+              "example": {
+                "Limit": 10
+              },
+              "format": "int32",
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          "Offset": {
+            "description": "Which object index to start with",
+            "type": "integer",
+            "required": false,
+            "schema": {
+              "example": {
+                "Offset": 45
+              },
+              "format": "int32",
+              "default": 0,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "Error": {
+        "properties": {
+          "header": {
+            "properties": {
+              "code": {
+                "format": "int32",
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      }
+    }
+  }
+}

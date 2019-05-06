@@ -161,6 +161,5 @@ class Launcher:
 
 
 if __name__ == '__main__':
-    # l = Launcher('specs/input/prpl HL-API (3.8)  short.xlsx')
-    l = Launcher('specs/input/prpl HL-API (3.8.2).xlsx')
+    l = Launcher('specs/input/04 prpl HL-API (3.8.2.7) [Release Candidate].xlsx')
     l.run()
