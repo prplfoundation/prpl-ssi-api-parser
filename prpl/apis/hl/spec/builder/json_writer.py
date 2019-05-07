@@ -29,7 +29,7 @@ class JSONSchemaWriter:
 
     """
 
-    def __init__(self, api, folder, template='/root/PycharmProjects/prpl-ssi-api-parser/specs/templates/prpl.json', object_template='/root/PycharmProjects/prpl-ssi-api-parser/specs/templates/object.json'):
+    def __init__(self, api, folder, template='../../../../../specs/templates/prpl.json', object_template='../../../../../specs/templates/object.json'):
         """Initializes the specification writer.
 
         Args:
@@ -40,9 +40,9 @@ class JSONSchemaWriter:
 
         self.api = api
         self.folder = folder
-        self.template = template
+        self.template = os.path.abspath(os.path.join(os.path.dirname(__file__), template))
         
-        f = open(object_template, "r")
+        f = open(os.path.abspath(os.path.join(os.path.dirname(__file__), object_template)), "r")
         self.objectTemplateString = f.read()
         f.close()
 
