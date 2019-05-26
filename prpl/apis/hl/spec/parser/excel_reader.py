@@ -183,7 +183,7 @@ class ExcelReader:
         return change_log
 
     def get_procedures(self):
-        """Parses the 'Object' Excel sheet and returns a list of HL-API objects and procedures.
+        """Parses the 'Objects & Methods' Excel sheet and returns a list of HL-API objects and procedures.
 
         Returns:
             list<dict>: Array of API objects and procedures.
@@ -192,8 +192,8 @@ class ExcelReader:
 
         return self._parse_sheet('Objects & Methods')
 
-    def get_fields(self):
-        """Parses the 'Fields' Excel sheet and returns as list of HL-API fields.
+    def get_parameters(self):
+        """Parses the 'Parameters' Excel sheet and returns as list of HL-API fields.
 
         Returns:
             list<dict>: Array of API fields.
@@ -201,6 +201,16 @@ class ExcelReader:
         """
 
         return self._parse_sheet('Parameters')
+
+    def get_data_types(self):
+        """Parses the 'Data Types' Excel sheet and returns as list of HL-API fields.
+
+        Returns:
+            list<dict>: Array of API fields.
+
+        """
+
+        return self._parse_sheet('Data Types')
 
     def get_response_codes(self):
         """Parses the 'Response Codes' Excel sheet and returns as list of HL-API return codes.
@@ -271,10 +281,15 @@ class ExcelReader:
         self.raw_procedures = self.get_procedures()
         logger.info('Objects - Parsing finished with {} procedures discovered.\n'.format(len(self.raw_procedures)))
 
-        # Parse fields.
-        logger.info('Fields - Parsing started.')
-        self.raw_fields = self.get_fields()
-        logger.info('Fields - Parsing finished with {} fields discovered.\n'.format(len(self.raw_fields)))
+        # Parse Parameters.
+        logger.info('Parameters - Parsing started.')
+        self.raw_parameters = self.get_parameters()
+        logger.info('Parameters - Parsing finished with {} fields discovered.\n'.format(len(self.raw_parameters)))
+
+        # Parse Data Types
+        logger.info('Data Types - Parsing started.')
+        self.raw_data_types = self.get_data_types()
+        logger.info('Data Types - Parsing finished with {} fields discovered.\n'.format(len(self.raw_data_types)))
 
         # Parse response codes.
         logger.info('Response Codes - Parsing started.')
