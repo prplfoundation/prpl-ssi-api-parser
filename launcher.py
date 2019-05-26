@@ -2,21 +2,24 @@
 import logging
 
 
-## TODO: make dynamic
-## readers
+# TODO: make dynamic
+# readers
 from prpl.apis.hl.spec.parser import ExcelReader as HLAPIExcelParser
 from prpl.apis.hl.spec.parser import JSONReader as HLAPIJSONParser
 
-## TODO: make dynamic
-## writers
+# TODO: make dynamic
+# writers
 from prpl.apis.hl.spec.builder import WordWriter as HLAPIWordWriter
 from prpl.apis.hl.spec.builder import ExcelWriter as HLAPIExcelWriter
-from prpl.apis.hl.spec.builder import JSONSchemaWriter as HLAPIJSONSSchemaWriter
+from prpl.apis.hl.spec.builder import \
+    JSONSchemaWriter as HLAPIJSONSSchemaWriter
+
 
 class Launcher:
     """HL-API Parser orchestrator.
 
-    Implements the logic of the parsings the HL-API and converting into a different format.
+    Implements the logic of the parsings the HL-API and
+    converting into a different format.
 
     """
 
@@ -34,7 +37,6 @@ class Launcher:
         self.api = None
         self.input_format = input_format
         self.output_format = output_format
-
 
         # Set logging format and level.
         log_level = logging.DEBUG
@@ -54,7 +56,6 @@ class Launcher:
         console.setFormatter(formatter)
 
         # logging.getLogger().addHandler(console)
-
 
     def _parse_from_excel(self):
         """Fills the api object with input from an Excel HL-API specification file.
@@ -91,8 +92,11 @@ class Launcher:
 
         # Build objects.
         logger.info('Word - Started building file.\n')
-        writer = HLAPIWordWriter(self.api,
-                                 'specs/generated/prpl HL-API ({}).docx'.format(self.api.get_version()))
+        writer = HLAPIWordWriter(
+                                self.api,
+                                'specs/generated/prpl HL-API ({}).docx'
+                                .format(self.api.get_version())
+                                )
         writer.build()
         logger.info('Word - Finished building file.')
 
@@ -102,7 +106,10 @@ class Launcher:
         logger = logging.getLogger('JSONSchemaWriter')
 
         # Build objects.
-        logger.info('JSON Schema - Started building files. {}\n'.format(self.api.get_version()))
+        logger.info(
+            'JSON Schema - Started building files. {}\n'
+            .format(self.api.get_version())
+        )
         folder = 'specs/generated/json/v{}/'.format(self.api.get_version())
         writer = HLAPIJSONSSchemaWriter(self.api, folder)
         writer.build()
@@ -116,7 +123,7 @@ class Launcher:
         # Build objects.
         logger.info('Excel - Started building file.\n')
         writer = HLAPIExcelWriter(self.api,
-                                 'specs/generated/')
+                                  'specs/generated/')
         writer.build()
         logger.info('Excel - Finished building file.')
 
@@ -125,27 +132,29 @@ class Launcher:
 
         logger = logging.getLogger('Launcher')
 
-        ## perform input type specific parsing
+        # perform input type specific parsing
         if self.input_format == "xls":
-          self._parse_from_excel()
+            self._parse_from_excel()
         elif self.input_format == "json":
-          self._parse_from_json()
-        
-        if self.api == None:
-          raise Exception("Error, no API parsed")
+            self._parse_from_json()
+
+        if self.api is None:
+            raise Exception("Error, no API parsed")
 
         logger.info('Finished building API {}.\n'.format(self.api))
         print("done parsing")
 
         if self.output_format == "json":
-          self._build_json_schema()
+            self._build_json_schema()
         elif self.output_format == "word":
-          self._build_word_report()
+            self._build_word_report()
         elif self.output_format == "xls":
-          self._build_excel_file()
-        
+            self._build_excel_file()
+
 
 if __name__ == '__main__':
-    l = Launcher('specs/input/04 prpl HL-API (3.8.2.7) [Release Candidate].xlsx')
+    l = Launcher(
+        'specs/input/04 prpl HL-API (3.8.2.7) [Release Candidate].xlsx'
+    )
     # l = Launcher('specs/generated/json/v3.8.2', input_format="json", output_format="xls")
     l.run()
