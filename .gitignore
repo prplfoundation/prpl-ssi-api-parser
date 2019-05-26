@@ -6,3 +6,4 @@ v3.8/*
 out/
 api/
 *.xls*
+.vscode*
