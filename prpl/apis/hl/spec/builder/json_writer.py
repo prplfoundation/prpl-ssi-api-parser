@@ -9,35 +9,40 @@ from json import JSONDecodeError
 import copy
 
 PATH_PARAMETER_TEMPLATE = {
-      "in": "path",
-      "name": "",
-      "type": "integer",
-      "required": True,
-      "description": ""
-    }
-
-INTEGER_PARAMETER_SCHEMA = {
-  "type": "integer",
-  "format": "int32",
-  "default": 20,
-  "example": {
-    "Limit": 10
-  }
+    "in": "path",
+    "name": "",
+    "type": "integer",
+    "required": True,
+    "description": ""
 }
 
-import logging 
-stream_handler = logging.StreamHandler() 
-stream_handler.setFormatter(logging.Formatter('%(asctime)s :: %(levelname)s :: %(name)s :: %(message)s')) 
-log = logging.getLogger(__name__) 
-log.addHandler(stream_handler) 
+INTEGER_PARAMETER_SCHEMA = {
+    "type": "integer",
+    "format": "int32",
+    "default": 20,
+    "example": {
+        "Limit": 10
+    }
+}
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(logging.Formatter(
+    '%(asctime)s :: %(levelname)s :: %(name)s :: %(message)s'))
+log = logging.getLogger(__name__)
+log.addHandler(stream_handler)
 log.setLevel(logging.INFO)
+
 
 class JSONSchemaWriter:
     """JSONSchema specification writer for prpl HL-API.
 
     """
 
-    def __init__(self, api, folder, template='../../../../../specs/templates/prpl.json', object_template='../../../../../specs/templates/object.json'):
+    def __init__(self,
+                 api,
+                 folder,
+                 template='../../../../../specs/templates/prpl.json',
+                 object_template='../../../../../specs/templates/object.json'):
         """Initializes the specification writer.
 
         Args:
@@ -48,9 +53,11 @@ class JSONSchemaWriter:
 
         self.api = api
         self.folder = folder
-        self.template = os.path.abspath(os.path.join(os.path.dirname(__file__), template))
-        
-        f = open(os.path.abspath(os.path.join(os.path.dirname(__file__), object_template)), "r")
+        self.template = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), template))
+
+        f = open(os.path.abspath(os.path.join(
+            os.path.dirname(__file__), object_template)), "r")
         self.objectTemplateString = f.read()
         f.close()
 
@@ -61,15 +68,17 @@ class JSONSchemaWriter:
         self.logger = logging.getLogger('JSONSchemaWriter')
 
         # Load template styles.
-        
+
         # Remove old folder.
-        self.logger.debug('File - Removing previous files "{}".'.format(self.folder))
+        self.logger.debug(
+            'File - Removing previous files "{}".'.format(self.folder))
         try:
-          shutil.rmtree(self.folder)
+            shutil.rmtree(self.folder)
         except Exception as e:
             self.logger.debug("ran into an exception removing old files")
 
-        self.logger.debug('File - Finished removing files "{}".'.format(self.folder))
+        self.logger.debug(
+            'File - Finished removing files "{}".'.format(self.folder))
 
         # create new folder
         os.makedirs(self.folder)
@@ -82,124 +91,125 @@ class JSONSchemaWriter:
         self.objects_only = False
 
 
-
 ####################################################################
-################################ SCHEMAS
+# SCHEMAS
 ####################################################################
 
     def makeBaseSchema(self, name, api_object):
-      desc = name + " Object"
-      res = {
-        "description": desc, 
-        "id": name,
-        "type": "object",
-        "required": [],
-        "properties": {},
-        "events": {},
-        "example": {},
-        "layer": api_object.layer
-      }
+        desc = name + " Object"
+        res = {
+            "description": desc,
+            "id": name,
+            "type": "object",
+            "required": [],
+            "properties": {},
+            "events": {},
+            "example": {},
+            "layer": api_object.layer
+        }
 
-      return res 
+        return res
 
     def getInitialProperty(self, f):
-      
-      res = {
-        "type": f.type,
-        "description": f.description,
-        "format": f.format,
-        "default_value": f.default_value,
-        "possible_values": f.possible_values
-      }
 
-      if "," in f.possible_values or "or" in f.possible_values:
+        res = {
+            "type": f.type,
+            "description": f.description,
+            "format": f.format,
+            "default_value": f.default_value,
+            "possible_values": f.possible_values
+        }
 
-        possible_values_regex = re.compile("^(.*?)(?:,|\sor\s)(\S+)$")
-        params = possible_values_regex.match(f.possible_values.replace('"',''))
-        # values = possible_values_regex.findall(f.possible_values.replace('"',''))
-        if params:
-          if len(params.groups()) > 0:
-            res["enum"] = list(params.groups())
+        if "," in f.possible_values or "or" in f.possible_values:
 
-      ## initial writable settings
-      if f.is_input and not f.is_output:
-        res["writeOnly"] = True
-      elif f.is_output and not f.is_input:
-        res["readOnly"] = True
+            possible_values_regex = re.compile("^(.*?)(?:,|\sor\s)(\S+)$")
+            params = possible_values_regex.match(
+                f.possible_values.replace('"', ''))
+            # values = possible_values_regex.findall(
+            #                                   f.possible_values.replace('"','')
+            #               )
+            if params:
+                if len(params.groups()) > 0:
+                    res["enum"] = list(params.groups())
 
-      return res
+        # initial writable settings
+        if f.is_input and not f.is_output:
+            res["writeOnly"] = True
+        elif f.is_output and not f.is_input:
+            res["readOnly"] = True
+
+        return res
 
     def getNestedProperty(self, f, res):
-      mainObject = f.name[:f.name.index(".")]
-      newProperty = f.name[f.name.index(".")+1:]
-      if mainObject not in res["properties"]:
-        
-        res["properties"][mainObject] = {
-          "type": "object",
-          "properties": {},
-          "required": []
-        }
+        mainObject = f.name[:f.name.index(".")]
+        newProperty = f.name[f.name.index(".")+1:]
+        if mainObject not in res["properties"]:
 
-      ## CULPRIT
-      newF = copy.deepcopy(f)
-      newF.name = newProperty
+            res["properties"][mainObject] = {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
 
-      
-      if "." in newF.name:
-        self.getNestedProperty(newF, res["properties"][mainObject])  
-      else:
-        self.getSimpleProperty(newF, res["properties"][mainObject])
+        # CULPRIT
+        newF = copy.deepcopy(f)
+        newF.name = newProperty
+
+        if "." in newF.name:
+            self.getNestedProperty(newF, res["properties"][mainObject])
+        else:
+            self.getSimpleProperty(newF, res["properties"][mainObject])
 
     def getSimpleProperty(self, f, res):
-      ## check if we have a simple property
-      if not(f.name in res["properties"].keys()):
-        ## initial writable settings
-        res["properties"][f.name] = self.getInitialProperty(f)
-      else:
-        ## update readable settings
-        if "writeOnly" in res["properties"][f.name] and f.is_output:
-          del res["properties"][f.name]["writeOnly"]
-        elif "readOnly" in res["properties"][f.name] and f.is_input:
-          del res["properties"][f.name]["readOnly"]
-      
-      if f.is_required and f.name not in res["required"]:
-        res["required"].append(f.name)
+        # check if we have a simple property
+        if not(f.name in res["properties"].keys()):
+            # initial writable settings
+            res["properties"][f.name] = self.getInitialProperty(f)
+        else:
+            # update readable settings
+            if "writeOnly" in res["properties"][f.name] and f.is_output:
+                del res["properties"][f.name]["writeOnly"]
+            elif "readOnly" in res["properties"][f.name] and f.is_input:
+                del res["properties"][f.name]["readOnly"]
+
+        if f.is_required and f.name not in res["required"]:
+            res["required"].append(f.name)
 
     def makePropertiesFromSchema(self, object, properties):
-      res = {"required":[], "properties":properties}
+        res = {"required": [], "properties": properties}
 
-      for p in object.procedures:
+        for p in object.procedures:
 
-        if p.name != "List":
+            if p.name != "List":
 
-          for f in p.parameters:
-            
-            if "." in f.name:
-              self.getNestedProperty(f, res)
-            else:
-              self.getSimpleProperty(f, res)
+                for f in p.parameters:
 
-      return res
+                    if "." in f.name:
+                        self.getNestedProperty(f, res)
+                    else:
+                        self.getSimpleProperty(f, res)
+
+        return res
 
     def makeEventsFromSchema(self, obj):
-      res = {}
+        res = {}
 
-      for ev in obj.events:
-        if ev.sample == "-":
-          sample = ""
-        else:
-          sample = json.dumps(json.loads(ev.sample))
-        res[ev.name] = {
-          "content": {
-            "application/json":{
-              "example": sample,
+        for ev in obj.events:
+            if ev.sample == "-":
+                sample = ""
+            else:
+                sample = json.dumps(json.loads(ev.sample))
+            res[ev.name] = {
+                "content": {
+                    "application/json": {
+                        "example": sample,
+                    }
+                },
+                "description": ev.description,
+                "code": ev.code
             }
-          },
-          "description": ev.description,
-          "code": ev.code
-        }
 
-      return res
+        return res
 
     # def addSchemas(self, idx, obj):
     #   """
@@ -214,350 +224,371 @@ class JSONSchemaWriter:
     #   name = re.sub('\.\{[^.]*\}$','', obj.name)
 
     #   if not name in schemas.keys():
-    #     schemas[name] = self.makeBaseSchema(name, obj)   
+    #     schemas[name] = self.makeBaseSchema(name, obj)
 
-    #   ## extract properties and required properties while merging with existing properties
-    #   properties_and_required = self.makePropertiesFromSchema(obj, schemas[name]["properties"])
+    #   ## extract properties and required properties while
+    #   merging with existing properties
+    #   properties_and_required = self.makePropertiesFromSchema(
+    #                               obj, schemas[name]["properties"])
 
     #   ## store properties
     #   schemas[name]["properties"] = properties_and_required["properties"]
 
     #   ## merge with already required properties
-    #   schemas[name]["required"] = schemas[name]["required"] + properties_and_required["required"]
+    #   schemas[name]["required"] = schemas[name]["required"] \
+    #                                   + properties_and_required["required"]
 
     #   ## create events list
-    #   schemas[name]["events"] = {**schemas[name]["events"], **self.makeEventsFromSchema(obj)}
+    #   schemas[name]["events"] = {**schemas[name]["events"],
+    #                               **self.makeEventsFromSchema(obj)}
 
     #   self.json_api_object["components"]["schemas"] = schemas
 
-
     def getSchema(self, name, idx, obj):
 
-      # schemas = self.json_api_object["components"]["schemas"] 
+        # schemas = self.json_api_object["components"]["schemas"]
 
-      ## get the name of the root object instead of the path
-      # name = re.sub('\.\{[^.]*\}$','', obj.name)
+        # get the name of the root object instead of the path
+        # name = re.sub('\.\{[^.]*\}$','', obj.name)
 
-      ## check if we already have a file
+        # check if we already have a file
 
-      try:
-        fname = "{}{}.json".format(self.folder, name)
-        
-        f = open(fname, 'r')
-        obj_dict = json.loads(f.read())
-        f.close()
+        try:
+            fname = "{}{}.json".format(self.folder, name)
 
-        schemas = obj_dict["components"]["schemas"]
-        
-      except Exception as e:
-        
-        schemas = json.loads(self.objectTemplateString)
+            f = open(fname, 'r')
+            obj_dict = json.loads(f.read())
+            f.close()
 
-      if not name in schemas.keys():
-        res = self.makeBaseSchema(name, obj)
-      else:
-        res = schemas[name]
+            schemas = obj_dict["components"]["schemas"]
 
-      ## extract properties and required properties while merging with existing properties
-      properties_and_required = self.makePropertiesFromSchema(obj, res["properties"])
+        except Exception as e:
 
-      ## store properties
-      res["properties"] = properties_and_required["properties"]
+            schemas = json.loads(self.objectTemplateString)
 
-      ## merge with already required properties
-      res["required"] = res["required"] + properties_and_required["required"]
+        if name not in schemas.keys():
+            res = self.makeBaseSchema(name, obj)
+        else:
+            res = schemas[name]
 
-      ## create events list
-      res["events"] = {**res["events"], **self.makeEventsFromSchema(obj)}
+        # extract properties and required properties
+        # while merging with existing properties
+        properties_and_required = self.makePropertiesFromSchema(
+            obj, res["properties"])
 
-      return res
+        # store properties
+        res["properties"] = properties_and_required["properties"]
+
+        # merge with already required properties
+        res["required"] = res["required"] + properties_and_required["required"]
+
+        # create events list
+        res["events"] = {**res["events"], **self.makeEventsFromSchema(obj)}
+
+        return res
 
     def fillResponseSchema(self, out):
-      for r in self.api.response_codes:
+        for r in self.api.response_codes:
 
-        name_set = list(set(out["components"]["schemas"]["Response"]["oneOf"][1]["properties"]["Header"]["properties"]["Name"]["enum"]))
-        name_set.append(r.name)
-        out["components"]["schemas"]["Response"]["oneOf"][1]["properties"]["Header"]["properties"]["Name"]["enum"] = list(set(name_set))
+            name_set = list(set(out["components"]["schemas"]["Response"]
+                                ["oneOf"][1]["properties"]["Header"]
+                                ["properties"]["Name"]["enum"]))
 
-      return out
+            name_set.append(r.name)
+
+            out["components"]["schemas"]["Response"]["oneOf"][1]\
+                ["properties"]["Header"]["properties"]["Name"]["enum"]\
+                = list(set(name_set))
+
+        return out
 
 ####################################################################
-################################ SCHEMAS EOF
+# SCHEMAS EOF
 ####################################################################
 
 ####################################################################
-################################ PATHS 
+# PATHS
 ####################################################################
 
     def getResponses(self):
 
-      if not(self.jsonResponses):
-        self.jsonResponses = {}
-        
-        for r in self.api.response_codes:
+        if not(self.jsonResponses):
+            self.jsonResponses = {}
 
-          try:
-            r_sample = json.dumps(json.loads(r.sample))
-          except JSONDecodeError as e:
-            log.info('Running fun_test ! {}\n{}'.format(e, r.sample))
-            print("error ")
+            for r in self.api.response_codes:
 
-          self.jsonResponses[r.name] = {
-            "description": r.description,
-            "raised_by": r.raised_by,
-            "content":{
-              "application/json": {
-                "example": r_sample,
-                "schema": {
-                  "$ref": "#/components/schemas/Response"
+                try:
+                    r_sample = json.dumps(json.loads(r.sample))
+                except JSONDecodeError as e:
+                    log.info('Running fun_test ! {}\n{}'.format(e, r.sample))
+                    print("error ")
+
+                self.jsonResponses[r.name] = {
+                    "description": r.description,
+                    "raised_by": r.raised_by,
+                    "content": {
+                        "application/json": {
+                            "example": r_sample,
+                            "schema": {
+                                "$ref": "#/components/schemas/Response"
+                            }
+                        }
+                    }
                 }
-              }
-            }            
-          }
 
-      return self.jsonResponses
-
+        return self.jsonResponses
 
     def makeRequestBody(self, obj, pr, object):
 
-      if pr.name not in ["Delete", "Get"]:
+        if pr.name not in ["Delete", "Get"]:
 
-        try:
-          s_request = json.dumps(json.loads(pr.sample_request))
-        except:
-          s_request = ""
-        
-        ref = "#/components/schemas/" + re.sub('\.\{[^.]*\}$','', object.name)
+            try:
+                s_request = json.dumps(json.loads(pr.sample_request))
+            except:
+                s_request = ""
 
-        if pr.name == "List":
-          ref = "#/components/schemas/ListRequest"
+            ref = "#/components/schemas/" + \
+                re.sub('\.\{[^.]*\}$', '', object.name)
 
-        schema = self.makeSchemaFromProcedureParameters(pr, True)
+            if pr.name == "List":
+                ref = "#/components/schemas/ListRequest"
 
-        res = {
-                "content":{
-                  "application/json": {
-                    "schema": schema,
-                    "example": s_request
-                  }
+            schema = self.makeSchemaFromProcedureParameters(pr, True)
+
+            res = {
+                "content": {
+                    "application/json": {
+                        "schema": schema,
+                        "example": s_request
+                    }
                 }
-              }
+            }
 
-        # res = {
-        #         "content":{
-        #           "application/json": {
-        #             "schema": {
-        #               "$ref": ref
-        #             },
-        #             "example": s_request
-        #           }
-        #         }
-        #       }
+            # res = {
+            #         "content":{
+            #           "application/json": {
+            #             "schema": {
+            #               "$ref": ref
+            #             },
+            #             "example": s_request
+            #           }
+            #         }
+            #       }
 
-        obj["requestBody"] = res
+            obj["requestBody"] = res
 
+    def makeSchemaFromProcedureParameters(self, procedure,
+                                          collect_request_parameters):
+        schema = {"properties": {}, "required": []}
 
-    def makeSchemaFromProcedureParameters(self, procedure, collect_request_parameters):
-      schema = {"properties":{}, "required": []}
+        for f in procedure.parameters:
+            if (collect_request_parameters and f.is_input) or\
+                    (not collect_request_parameters and f.is_output):
+                if "." in f.name:
+                    self.getNestedProperty(f, schema)
 
-      for f in procedure.parameters:
-        if (collect_request_parameters and f.is_input) or (not collect_request_parameters and f.is_output):
-          if "." in f.name:
-            self.getNestedProperty(f, schema)
-            
-          else:
-            self.getSimpleProperty(f, schema)
+                else:
+                    self.getSimpleProperty(f, schema)
 
-      return schema
+        return schema
 
     def makePathsFromObject(self, api_object):
-      res = {}
-      for pr in api_object.procedures:
-        
-        try:
-          s_response = json.dumps(json.loads(pr.sample_response))
-        except:
-          s_response = ""
+        res = {}
+        for pr in api_object.procedures:
 
-        schema = self.makeSchemaFromProcedureParameters(pr, False)
+            try:
+                s_response = json.dumps(json.loads(pr.sample_response))
+            except:
+                s_response = ""
 
-        obj = {
-          "operationId": api_object.name + "." + pr.name,
-          "summary": pr.description,
-          "tags": [api_object.name]
-        }
+            schema = self.makeSchemaFromProcedureParameters(pr, False)
 
-        obj["responses"] = self.getResponses()
-
-        obj["responses"]["OK"]["content"]["application/json"]["example"] = s_response
-        obj["responses"]["OK"]["content"]["application/json"]["schema"] = {
-                    "allOf": [
-                      {"$ref": "#/components/schemas/Response"},
-                      {
-                        "properties": {
-                          "Body": schema
-                        }
-                      }
-                    ]
-                  }
-
-        self.makeRequestBody(obj, pr, api_object)
-
-        if pr.name == "List":
-          obj["schema"] = {
-            "type": "object",
-            "properties": {
-              "offset": {
-                "type": "integer",
-                "description": "Which object index to start with",
-                "example": 45,
-                "default": 0
-              },
-              "limit": {
-                "type": "integer",
-                "description": "How many objects to return",
-                "min": 1,
-                "max": 200,
-                "default": 20
-              }
+            obj = {
+                "operationId": api_object.name + "." + pr.name,
+                "summary": pr.description,
+                "tags": [api_object.name]
             }
-          }
 
-        ## check if we are a sub object path
-        if "{" in api_object.name:
-          obj["parameters"] = []
-          params_re = re.compile('\{(.*?)\}')
-          params_matches = params_re.findall(api_object.name)
+            obj["responses"] = self.getResponses()
 
-          for p in params_matches:
-            new_param = copy.deepcopy(PATH_PARAMETER_TEMPLATE)
-            new_param["name"] = p
-            new_param["description"] = "ID of a(n) {}".format(p.replace("Id", ""))
-            if new_param["type"] == "integer":
-              new_param["schema"] = json.loads(json.dumps(INTEGER_PARAMETER_SCHEMA))
-            obj["parameters"].append(new_param)
+            obj["responses"]["OK"]["content"]["application/json"]["example"] =\
+                s_response
+            obj["responses"]["OK"]["content"]["application/json"]["schema"] = {
+                "allOf": [
+                    {"$ref": "#/components/schemas/Response"},
+                    {
+                        "properties": {
+                            "Body": schema
+                        }
+                    }
+                ]
+            }
 
-        res[api_object.name + "." + pr.name] = obj
+            self.makeRequestBody(obj, pr, api_object)
 
-      return res
+            if pr.name == "List":
+                obj["schema"] = {
+                    "type": "object",
+                    "properties": {
+                        "offset": {
+                            "type": "integer",
+                            "description": "Which object index to start with",
+                            "example": 45,
+                            "default": 0
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "How many objects to return",
+                            "min": 1,
+                            "max": 200,
+                            "default": 20
+                        }
+                    }
+                }
+
+            # check if we are a sub object path
+            if "{" in api_object.name:
+                obj["parameters"] = []
+                params_re = re.compile('\{(.*?)\}')
+                params_matches = params_re.findall(api_object.name)
+
+                for p in params_matches:
+                    new_param = copy.deepcopy(PATH_PARAMETER_TEMPLATE)
+                    new_param["name"] = p
+                    new_param["description"] = "ID of a(n) {}".format(
+                        p.replace("Id", ""))
+                    if new_param["type"] == "integer":
+                        new_param["schema"] = json.loads(
+                            json.dumps(INTEGER_PARAMETER_SCHEMA))
+                    obj["parameters"].append(new_param)
+
+            res[api_object.name + "." + pr.name] = obj
+
+        return res
 
     def getPaths(self, name, idx, obj):
 
-      if not name in self.json_api_object["paths"]:
-        self.json_api_object["paths"][name] = {}
+        if name not in self.json_api_object["paths"]:
+            self.json_api_object["paths"][name] = {}
 
-      return self.makePathsFromObject(obj)
+        return self.makePathsFromObject(obj)
 
-
-####################################################################
-################################ PATHS EOF
-####################################################################
 
 ####################################################################
-################################ INSTANCES
+# PATHS EOF
+####################################################################
+
+####################################################################
+# INSTANCES
 ####################################################################
 
     def getInstances(self, obj):
-      res = {}
+        res = {}
 
-      for ins in obj.instances:
-        res[ins.name] = {
-          'description': ins.description
-        }
+        for ins in obj.instances:
+            res[ins.name] = {
+                'description': ins.description
+            }
 
-      return res
-
-####################################################################
-################################ INSTANCES EOF
-####################################################################
+        return res
 
 ####################################################################
-################################ VERSIONS
+# INSTANCES EOF
+####################################################################
+
+####################################################################
+# VERSIONS
 ####################################################################
 
     def addVersions(self):
 
-      self.json_api_object["versions"] = {}
+        self.json_api_object["versions"] = {}
 
-      for v in self.api.versions:
-        
-        self.json_api_object["versions"][v.number] = {
-          'date': v.date,
-          'changes': v.change_list
-        }
+        for v in self.api.versions:
+
+            self.json_api_object["versions"][v.number] = {
+                'date': v.date,
+                'changes': v.change_list
+            }
 
 
 ####################################################################
-################################ VERSIONS EOF
+# VERSIONS EOF
 ####################################################################
 
     def writeFile(self, name, obj):
-      filepath = "{}{}.json".format(self.folder, name)
+        filepath = "{}{}.json".format(self.folder, name)
 
-      f = open(filepath, "w")
-      f.write(json.dumps(obj, indent=2))
-      f.close()
+        f = open(filepath, "w")
+        f.write(json.dumps(obj, indent=2))
+        f.close()
 
     def createFilesAndPopulateObject(self):
 
-      if (self.objects_only):
-        object_schemas = {}
-
-      for idx, obj in enumerate(self.api.objects):
-
-        name = re.sub('\.\{[^.]*\}$','', obj.name)
-        f_name = "{}{}.json".format(self.folder, name)
-
-        ## check if we already have a file of that name
-        if os.path.isfile(f_name):
-          f = open(f_name, "r")
-          out = json.loads(f.read())
-          f.close()
-        else:
-          ## if not, load template
-          out = json.loads(self.objectTemplateString)
-
-        ## add schemas
-        ## TODO: this changes the field.name
-        out["components"]["schemas"][name] = self.getSchema(name, idx, obj)
         if (self.objects_only):
-          object_schemas[name] = json.loads(json.dumps(out["components"]["schemas"][name]))
-        out = self.fillResponseSchema(out)
-        ## add paths
+            object_schemas = {}
 
-        if out["paths"] == None:
-          out["paths"] = self.getPaths(name, idx, obj)
-        else:
-          out["paths"] = {**out["paths"], **self.getPaths(name, idx, obj)}
-        
-        if len(obj.instances) > 0:
-          out["instances"] = self.getInstances(obj)
+        for idx, obj in enumerate(self.api.objects):
 
-        self.json_api_object["paths"][name]["$ref"] = "{}.json#/paths".format(name)
-        self.json_api_object["components"]["schemas"].update({name:{"$ref": "{}.json#/components/schemas/{}".format(name, name)}})
-        self.writeFile(name, out)
+            name = re.sub('\.\{[^.]*\}$', '', obj.name)
+            f_name = "{}{}.json".format(self.folder, name)
 
-        if (self.objects_only):
-          f = open(self.template, "r")
-          objects_only = json.loads(f.read())
-          f.close()
+            # check if we already have a file of that name
+            if os.path.isfile(f_name):
+                f = open(f_name, "r")
+                out = json.loads(f.read())
+                f.close()
+            else:
+                # if not, load template
+                out = json.loads(self.objectTemplateString)
 
-          del objects_only["components"]["schemas"]["ListRequest"]
-          objects_only["components"]["schemas"] = object_schemas
+            # add schemas
+            # TODO: this changes the field.name
+            out["components"]["schemas"][name] = self.getSchema(name, idx, obj)
+            if (self.objects_only):
+                object_schemas[name] = json.loads(
+                    json.dumps(out["components"]["schemas"][name]))
+            out = self.fillResponseSchema(out)
+            # add paths
 
-          self.writeFile("objects_only", objects_only)
+            if out["paths"] is None:
+                out["paths"] = self.getPaths(name, idx, obj)
+            else:
+                out["paths"] = {**out["paths"], **
+                                self.getPaths(name, idx, obj)}
 
-      self.addVersions()
+            if len(obj.instances) > 0:
+                out["instances"] = self.getInstances(obj)
+
+            self.json_api_object["paths"][name]["$ref"] =\
+                "{}.json#/paths".format(name)
+
+            self.json_api_object["components"]["schemas"].update(
+                {name: {"$ref": "{}.json#/components/schemas/{}"
+                        .format(name, name)}})
+            self.writeFile(name, out)
+
+            if (self.objects_only):
+                f = open(self.template, "r")
+                objects_only = json.loads(f.read())
+                f.close()
+
+                del objects_only["components"]["schemas"]["ListRequest"]
+                objects_only["components"]["schemas"] = object_schemas
+
+                self.writeFile("objects_only", objects_only)
+
+        self.addVersions()
 
     def writeOut(self):
-      self.writeFile("api", self.json_api_object)
+        self.writeFile("api", self.json_api_object)
 
     def build(self):
 
-      ## populate API object
-      self.createFilesAndPopulateObject()
+        # populate API object
+        self.createFilesAndPopulateObject()
 
-      ## write file
-      self.writeOut()
+        # write file
+        self.writeOut()
 
-# 
+#
