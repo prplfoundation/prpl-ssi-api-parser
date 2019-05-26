@@ -502,8 +502,10 @@ class JSONSchemaWriter:
 
     def addVersions(self):
 
+        # create versions list
         self.json_api_object["versions"] = {}
 
+        # add all versions to version list
         for v in self.api.versions:
 
             self.json_api_object["versions"][v.number] = {
@@ -511,6 +513,8 @@ class JSONSchemaWriter:
                 'changes': v.change_list
             }
 
+        # set overall version to last version number
+        self.json_api_object["info"]["version"] = self.api.get_version()
 
 ####################################################################
 # VERSIONS EOF
