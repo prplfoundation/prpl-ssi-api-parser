@@ -37,11 +37,7 @@ class JSONSchemaWriter:
 
     """
 
-<<<<<<< HEAD
-    def __init__(self, api, folder, template='specs/templates/prpl.json', object_template='specs/templates/object.json', response_schema_template='specs/templates/response.json'):
-=======
     def __init__(self, api, folder, template='../../../../../specs/templates/prpl.json', object_template='../../../../../specs/templates/object.json'):
->>>>>>> 27d437c0b1338327cf8a0d023c524938b0d4485d
         """Initializes the specification writer.
 
         Args:
@@ -52,14 +48,7 @@ class JSONSchemaWriter:
 
         self.api = api
         self.folder = folder
-<<<<<<< HEAD
-        self.template = template
-        rstf = open(response_schema_template, "r")
-        self.response_schema_template_string =  rstf.read()
-        rstf.close()
-=======
         self.template = os.path.abspath(os.path.join(os.path.dirname(__file__), template))
->>>>>>> 27d437c0b1338327cf8a0d023c524938b0d4485d
         
         f = open(os.path.abspath(os.path.join(os.path.dirname(__file__), object_template)), "r")
         self.objectTemplateString = f.read()
