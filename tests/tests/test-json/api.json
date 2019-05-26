@@ -1,0 +1,87 @@
+{
+  "openapi": "3.0.0",
+  "versions": {
+    "3.5": {
+      "date": "2018-04-13",
+      "changes": [
+        [
+          1,
+          "Added new \"foo\" object."
+        ]
+      ]
+    }
+  },
+  "servers": [
+    {
+      "url": "ubus"
+    }
+  ],
+  "info": {
+    "title": "prpl Software Stack Independent API",
+    "version": "1.0.0",
+    "license": {
+      "name": "ISC"
+    }
+  },
+  "components": {
+    "schemas": {
+      "User.Accounts": {
+        "$ref": "User.Accounts.json#/components/schemas/User.Accounts"
+      },
+      "ListRequest": {
+        "properties": {
+          "Limit": {
+            "description": "How many items to return at one time (max 200)",
+            "type": "integer",
+            "required": false,
+            "schema": {
+              "example": {
+                "Limit": 10
+              },
+              "format": "int32",
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          "Offset": {
+            "description": "Which object index to start with",
+            "type": "integer",
+            "required": false,
+            "schema": {
+              "example": {
+                "Offset": 45
+              },
+              "format": "int32",
+              "default": 0,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "Error": {
+        "properties": {
+          "header": {
+            "properties": {
+              "code": {
+                "format": "int32",
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      }
+    }
+  },
+  "paths": {
+    "User.Accounts": {
+      "$ref": "User.Accounts.json#/paths"
+    }
+  }
+}
