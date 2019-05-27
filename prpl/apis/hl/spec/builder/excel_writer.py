@@ -157,7 +157,7 @@ class ExcelWriter:
                              resource,
                              fields):
 
-        fields_sheet = wb.get_sheet_by_name("Fields")
+        fields_sheet = wb.get_sheet_by_name("Parameters")
 
         # loop through procedure's fields
         for f in fields:
@@ -172,7 +172,7 @@ class ExcelWriter:
     def iterateThroughObjects(self, wb):
 
         object_sheet = wb.get_sheet_by_name("Objects & Methods")
-        fields_sheet = wb.get_sheet_by_name("Fields")
+        fields_sheet = wb.get_sheet_by_name("Parameters")
         events_sheet = wb.get_sheet_by_name("Events")
         toc_sheet = wb.get_sheet_by_name("ToC")
         response_code_sheet = wb.get_sheet_by_name("Response Codes")
@@ -202,7 +202,7 @@ class ExcelWriter:
 
                 # append new row with values
                 object_sheet.append([api_object.layer,
-                                    api_object.resource,
+                                    api_object.name,
                                     procedure.name,
                                     procedure.sample_request,
                                     procedure.sample_response,
@@ -666,7 +666,7 @@ class ExcelWriter:
             ws.column_dimensions[l].width = HEADER_CELL_WIDTHS["fields"][l]
 
         # create new sheet
-        ws = wb.create_sheet("Objects & Methods`", 1)
+        ws = wb.create_sheet("Objects & Methods", 1)
 
         # append header row
         ws.append(["Layer", "Object", "Procedure", "Arguments",

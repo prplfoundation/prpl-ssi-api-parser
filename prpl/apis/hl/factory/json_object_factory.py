@@ -153,7 +153,8 @@ class JSONObjectFactory:
         # Returns events.
         return events
 
-    def _get_field(self, fields, property_name, property_values, is_input, is_output, required_list):
+    def _get_field(self, fields, property_name, property_values,
+                   is_input, is_output, required_list):
 
         # print(property_values)
                                 # check if we are dealing with a nested object
@@ -286,55 +287,72 @@ class JSONObjectFactory:
         # Iterate through each procedure.
         for object_name, object_schema in self.object_schemas.items():
 
-            schema = object_schema["components"]["schemas"][object_name]
+            # iterate over paths to find all root objects
+            object_names = []
+            for p in object_schema["paths"].keys():
+                name = p[0:p.rfind(".")]
+                if name not in object_names:
+                    object_names.append(name)
 
-            procedure = list(object_schema["paths"].keys())[0]
-            # Create new API Object.
+            print(object_names)
 
-            resource = re.sub(
-                r'\{.+?\}\s?', "", object_schema["paths"][procedure]["tags"][0].replace(".", " "))
-            api_object = HLAPIObject(schema["layer"], object_name, resource)
+            for o in object_names:
 
-            # Append to list.
-            objects.append(api_object)
-            self.logger.debug(
-                'Objects - Created object "{}"'.format(object_name))
+                schema = object_schema["components"]["schemas"][object_name]
 
-            # Parse events and append.
-            api_object.events += self._get_events(schema, object_name)
+                procedure = list(object_schema["paths"].keys())[0]
 
-            # Parse instances and append.
-            if "instances" in object_schema.keys():
-                api_object.instances += self._get_instances(
-                    object_schema["instances"])
+                # Create new API Object.
 
-            for procedure_name, p in object_schema["paths"].items():
+                # resource = re.sub(
+                    # r'\{.+?\}\s?', "", object_schema["paths"][procedure]["tags"][0].replace(".", " "))
+                resource = object_schema["paths"][procedure]["tags"][0]
 
-                p_name = procedure_name.split(".")[-1]
-                # collect info about procedure
+                api_object = HLAPIObject(schema["layer"], o, resource)
 
-                if "requestBody" not in p:
-                    request_example = "-"
-                else:
-                    request_example = p["requestBody"]["content"]["application/json"]["example"]
-
-                if "responses" not in p:
-                    response_example = "-"
-                else:
-                    response_example = p["responses"]["OK"]["content"]["application/json"]["example"]
-
-                # Create new procedure.
-                api_procedure = HLAPIProcedure(
-                    p_name, p['summary'], request_example, response_example)
-
-                # Link it to object.
-                api_object.procedures.append(api_procedure)
+                # Append to list.
+                objects.append(api_object)
                 self.logger.debug(
-                    'Procedures - Added procedure "{}" to "{}".'.format(
-                        api_procedure.name, object_name))
+                    'Objects - Created object "{}"'.format(o))
 
-                # Parse fields and append.
-                api_procedure.fields = self._get_fields(p_name, p)
+                # Parse events and append.
+                api_object.events += self._get_events(schema, object_name)
+
+                # Parse instances and append.
+                if "instances" in object_schema.keys():
+                    api_object.instances += self._get_instances(
+                        object_schema["instances"])
+
+                for procedure_name, p in object_schema["paths"].items():
+                    p_name = procedure_name.split(".")[-1]
+                    
+                    # check if the procedure belongs to this object name (accounting for instance methods)
+                    if procedure_name[0:procedure_name.rfind(".")] == o:
+
+                        # collect info about procedure
+
+                        if "requestBody" not in p:
+                            request_example = "-"
+                        else:
+                            request_example = p["requestBody"]["content"]["application/json"]["example"]
+
+                        if "responses" not in p:
+                            response_example = "-"
+                        else:
+                            response_example = p["responses"]["OK"]["content"]["application/json"]["example"]
+
+                        # Create new procedure.
+                        api_procedure = HLAPIProcedure(
+                            p_name, p['summary'], request_example, response_example)
+
+                        # Link it to object.
+                        api_object.procedures.append(api_procedure)
+                        self.logger.debug(
+                            'Procedures - Added procedure "{}" to "{}".'.format(
+                                api_procedure.name, o))
+
+                        # Parse fields and append.
+                        api_procedure.fields = self._get_fields(p_name, p)
 
         return objects
 
