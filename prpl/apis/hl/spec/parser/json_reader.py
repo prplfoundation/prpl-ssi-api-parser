@@ -38,11 +38,11 @@ class JSONReader:
 
         self.logger = logging.getLogger('JSONReader')
 
-
     def _build_objects(self):
         """Builds HL-API objects.
 
-        It converts and links raw-data read from JSON folder into HL-API objects.
+        It converts and links raw-data read from JSON
+        folder into HL-API objects.
 
         """
 
@@ -51,10 +51,10 @@ class JSONReader:
         # Build objects.
         logger.info('Building API objects.\n')
         factory = JSONObjectFactory(self.api_json,
-                                     self.object_schemas)
+                                    self.object_schemas)
 
         return factory.get_api()
-    
+
     def _parse_objects(self):
         res = {}
 
