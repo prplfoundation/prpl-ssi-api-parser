@@ -3,3 +3,6 @@ openpyxl==2.4.9
 python_docx==0.8.6
 docx==0.2.4
 nose2
+pandas
+xlsxwriter
+pathlib
