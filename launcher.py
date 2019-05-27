@@ -153,8 +153,12 @@ class Launcher:
 
 
 if __name__ == '__main__':
+    # l = Launcher(
+    #     'specs/input/3.8.2.7 [RC].xlsx'
+    # )
     l = Launcher(
-        'specs/input/04 prpl HL-API (3.8.2.7) [Release Candidate].xlsx'
-    )
-    # l = Launcher('specs/generated/json/v3.8.2', input_format="json", output_format="xls")
+            'specs/generated/json/v3.8.2.7',
+            input_format="json",
+            output_format="xls"
+            )
     l.run()
