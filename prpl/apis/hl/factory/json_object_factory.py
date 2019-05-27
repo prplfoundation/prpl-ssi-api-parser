@@ -20,7 +20,7 @@ class JSONObjectFactory:
 
     Example:
         # Use JSONReader to parse the specification folder.
-        
+
 
     """
 
@@ -47,17 +47,17 @@ class JSONObjectFactory:
 
         versions_list = []
         for version, value in self.api_json["versions"].items():
-            v = HLAPIVersion(version, self.api_json["versions"][version]['date'])
+            v = HLAPIVersion(
+                version, self.api_json["versions"][version]['date'])
             v.change_list = self.api_json["versions"][version]['changes']
             versions_list.append(v)
             self.logger.debug('ChangeLog - Added version "{} ({})" with {} changes.'.format(v.number,
-                                                                           v.date,
-                                                                           len(v.change_list)))
+                                                                                            v.date,
+                                                                                            len(v.change_list)))
 
         return versions_list
 
     def _get_response_codes(self):
-
         """Generates a list of HL-API ResponseCodes.
 
         Returns:
@@ -79,11 +79,14 @@ class JSONObjectFactory:
             if response_name != "99":
 
                 # Create new response code object instance and append.
-                api_code = HLAPIResponseCode(response_name, response['description'], response['content']['application/json']['example'], response['raised_by'])
+                api_code = HLAPIResponseCode(
+                    response_name, response['description'], response['content']['application/json']['example'], response['raised_by'])
                 codes.append(api_code)
-                self.logger.debug('Response Codes - Created response code "{}".'.format(api_code.name))
+                self.logger.debug(
+                    'Response Codes - Created response code "{}".'.format(api_code.name))
 
-        self.logger.debug('Response Codes - All response codes have been successfully linked.')
+        self.logger.debug(
+            'Response Codes - All response codes have been successfully linked.')
 
         # Return list of parsed response codes.
         return codes
@@ -110,8 +113,8 @@ class JSONObjectFactory:
 
             api_instance = HLAPIInstance(instance_name, values['description'])
             instances.append(api_instance)
-            self.logger.debug('Instances - Added instance "{}".'.format(api_instance.name))
-
+            self.logger.debug(
+                'Instances - Added instance "{}".'.format(api_instance.name))
 
         # Return instances.
         return instances
@@ -119,14 +122,17 @@ class JSONObjectFactory:
     def _get_events(self, object_schema, object_name):
         """Generates a list of HL-API Events based on the object's schema.
 
-        For optimal performance, this method assumes that 'self.events' is sorted by object name (ascending).
-        Once an event which does not match the object name is found it returns without processing all entries.
+        For optimal performance, this method assumes that
+        'self.events' is sorted by object name (ascending).
+        Once an event which does not match the object name
+        is found it returns without processing all entries.
 
         Args:
             object_schmema (dict): dictionary holding the object's json schema.
 
         Returns:
-            list<prpl.apis.hl.com.Event>: List of events which matched the specified object name.
+            list<prpl.apis.hl.com.Event>: List of events which
+            matched the specified object name.
 
         """
 
@@ -134,14 +140,15 @@ class JSONObjectFactory:
         events = []
 
         # Iterate through each event.
-        for code, e in object_schema["events"].items():
+        for name, e in object_schema["events"].items():
 
             prefix = "{}_".format(object_name.upper().replace(".", "_"))
-            name = "{}".format(e['code'].replace(prefix, ""))
-            api_event = HLAPIEvent(code, name, e['description'], e["content"]["application/json"]['example'])
+            # name = "{}".format(e['code'].replace(prefix, ""))
+            api_event = HLAPIEvent(
+                e["code"], name, e['description'], e["content"]["application/json"]['example'])
             events.append(api_event)
-            self.logger.debug('Events - Added event "{}".'.format(api_event.name))
-
+            self.logger.debug(
+                'Events - Added event "{}".'.format(api_event.name))
 
         # Returns events.
         return events
@@ -149,20 +156,21 @@ class JSONObjectFactory:
     def _get_field(self, fields, property_name, property_values, is_input, is_output, required_list):
 
         # print(property_values)
-				# check if we are dealing with a nested object
+                                # check if we are dealing with a nested object
         if "properties" in property_values.keys() or property_values["type"] == "object":
 
             # if so, iterate through sub objects
             for sp_name in list(property_values["properties"].keys()):
-                
+
                 # create new name
                 if property_name != "Body":
-                  combined_name = "{}.{}".format(property_name, sp_name)
+                    combined_name = "{}.{}".format(property_name, sp_name)
                 else:
-                  combined_name = sp_name
+                    combined_name = sp_name
 
                 # recursively call this function
-                self._get_field(fields, combined_name, property_values["properties"][sp_name], is_input, is_output, property_values["required"])
+                self._get_field(
+                    fields, combined_name, property_values["properties"][sp_name], is_input, is_output, property_values["required"])
         else:
             # otherwise, proceed to add new field
 
@@ -181,11 +189,16 @@ class JSONObjectFactory:
 
             # create notes property
             if default_value != "" and default_value != "-":
-                notes = notes + "Default value is \"{}\". ".format(property_values['default_value'])
+                notes = notes + \
+                    "Default value is \"{}\". ".format(
+                        property_values['default_value'])
             if possible_values != "" and possible_values != "-":
-                notes = notes + "Possible value are \"{}\". ".format(property_values['possible_values'])
+                notes = notes + \
+                    "Possible value are \"{}\". ".format(
+                        property_values['possible_values'])
             if field_format != "" and field_format != "-":
-                notes = notes + "Format is {}. ".format(property_values['format'])
+                notes = notes + \
+                    "Format is {}. ".format(property_values['format'])
             if notes == "":
                 notes = "-"
 
@@ -204,7 +217,6 @@ class JSONObjectFactory:
 
             # set new field to object
             fields[property_name] = api_field
-
 
     def _get_fields(self, procedure_name, path_schema):
         """Generates a list of HL-API Fields based on the specified object and procedure names.
@@ -230,33 +242,34 @@ class JSONObjectFactory:
 
             # iterate over each property and add accordingly
             for property_name, property_values in path_schema["requestBody"]["content"]["application/json"]["schema"]["properties"].items():
-            
-                ## for easier reading this is initialized up here
+
+                # for easier reading this is initialized up here
                 is_input = True
                 is_output = False
 
-                self._get_field(fields, property_name, property_values, is_input, is_output, path_schema["requestBody"]["content"]["application/json"]["schema"]["required"])
+                self._get_field(fields, property_name, property_values, is_input, is_output,
+                                path_schema["requestBody"]["content"]["application/json"]["schema"]["required"])
         # check response with code 99 and add fields from schema
         # iterate over each property and add accordingly
-        for property_name, property_values in path_schema["responses"]["99"]["content"]["application/json"]["schema"]["allOf"][1]["properties"].items():
+        for property_name, property_values in path_schema["responses"]["OK"]["content"]["application/json"]["schema"]["allOf"][1]["properties"].items():
 
-            ## for easier reading this is initialized up here
+            # for easier reading this is initialized up here
             is_input = False
             is_output = True
 
-            ## check if we already have an input parameter with the same name
-            ## if not, create a completely new field
+            # check if we already have an input parameter with the same name
+            # if not, create a completely new field
             if not property_name in fields.keys():
-                self._get_field(fields, property_name, property_values, is_input, is_output, path_schema["responses"]["99"]["content"]["application/json"]["schema"]["allOf"][1]["properties"]["Body"]["required"])
+                self._get_field(fields, property_name, property_values, is_input, is_output,
+                                path_schema["responses"]["OK"]["content"]["application/json"]["schema"]["allOf"][1]["properties"]["Body"]["required"])
             else:
-                ## if yes, update existing field 
-                ## set field to also be an output field
+                # if yes, update existing field
+                # set field to also be an output field
                 fields[property_name].is_output = True
 
-                ## check required, if it is true, set it on the existing property
-                if property_name in path_schema["responses"]["99"]["content"]["application/json"]["schema"]["required"]:
+                # check required, if it is true, set it on the existing property
+                if property_name in path_schema["responses"]["OK"]["content"]["application/json"]["schema"]["required"]:
                     fields[property_name].is_required = True
-
 
         return fields
 
@@ -278,41 +291,47 @@ class JSONObjectFactory:
             procedure = list(object_schema["paths"].keys())[0]
             # Create new API Object.
 
-            resource = re.sub(r'\{.+?\}\s?', "", object_schema["paths"][procedure]["tags"][0].replace("."," "))
+            resource = re.sub(
+                r'\{.+?\}\s?', "", object_schema["paths"][procedure]["tags"][0].replace(".", " "))
             api_object = HLAPIObject(schema["layer"], object_name, resource)
 
             # Append to list.
             objects.append(api_object)
-            self.logger.debug('Objects - Created object "{}"'.format(object_name))
+            self.logger.debug(
+                'Objects - Created object "{}"'.format(object_name))
 
             # Parse events and append.
             api_object.events += self._get_events(schema, object_name)
 
             # Parse instances and append.
             if "instances" in object_schema.keys():
-                api_object.instances += self._get_instances(object_schema["instances"])
+                api_object.instances += self._get_instances(
+                    object_schema["instances"])
 
             for procedure_name, p in object_schema["paths"].items():
 
                 p_name = procedure_name.split(".")[-1]
                 # collect info about procedure
-                
-                if not "requestBody" in p:
+
+                if "requestBody" not in p:
                     request_example = "-"
                 else:
                     request_example = p["requestBody"]["content"]["application/json"]["example"]
 
-                if not "responses" in p:
+                if "responses" not in p:
                     response_example = "-"
                 else:
-                    response_example = p["responses"]["99"]["content"]["application/json"]["example"]
+                    response_example = p["responses"]["OK"]["content"]["application/json"]["example"]
 
-                # Create new procedure.    
-                api_procedure = HLAPIProcedure(p_name, p['summary'], request_example, response_example)
+                # Create new procedure.
+                api_procedure = HLAPIProcedure(
+                    p_name, p['summary'], request_example, response_example)
 
                 # Link it to object.
                 api_object.procedures.append(api_procedure)
-                self.logger.debug('Procedures - Added procedure "{}" to "{}".'.format(api_procedure.name, object_name))
+                self.logger.debug(
+                    'Procedures - Added procedure "{}" to "{}".'.format(
+                        api_procedure.name, object_name))
 
                 # Parse fields and append.
                 api_procedure.fields = self._get_fields(p_name, p)
