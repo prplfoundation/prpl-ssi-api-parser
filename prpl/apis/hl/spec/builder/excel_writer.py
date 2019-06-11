@@ -200,6 +200,10 @@ class ExcelWriter:
                 resource = re.sub(r'\{.+?\}\s?', "",
                                   api_object.resource.replace(".", " "))
 
+                # cut off trailing s
+                if resource[-1] == "s":
+                    resource = resource[0:-1]
+
                 # append new row with values
                 object_sheet.append([api_object.layer,
                                     api_object.name,

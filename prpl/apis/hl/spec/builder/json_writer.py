@@ -312,29 +312,28 @@ class JSONSchemaWriter:
 
     def getResponses(self):
 
-        if not(self.jsonResponses):
-            self.jsonResponses = {}
+        self.jsonResponses = {}
 
-            for r in self.api.response_codes:
+        for r in self.api.response_codes:
 
-                try:
-                    r_sample = json.dumps(json.loads(r.sample))
-                except JSONDecodeError as e:
-                    log.info('Running fun_test ! {}\n{}'.format(e, r.sample))
-                    print("error ")
+            try:
+                r_sample = json.dumps(json.loads(r.sample))
+            except JSONDecodeError as e:
+                log.info('Running fun_test ! {}\n{}'.format(e, r.sample))
+                print("error ")
 
-                self.jsonResponses[r.name] = {
-                    "description": r.description,
-                    "raised_by": r.raised_by,
-                    "content": {
-                        "application/json": {
-                            "example": r_sample,
-                            "schema": {
-                                "$ref": "#/components/schemas/Response"
-                            }
+            self.jsonResponses[r.name] = {
+                "description": r.description,
+                "raised_by": r.raised_by,
+                "content": {
+                    "application/json": {
+                        "example": r_sample,
+                        "schema": {
+                            "$ref": "#/components/schemas/Response"
                         }
                     }
                 }
+            }
 
         return self.jsonResponses
 
@@ -413,7 +412,8 @@ class JSONSchemaWriter:
 
             obj["responses"]["OK"]["content"]["application/json"]["example"] =\
                 s_response
-            obj["responses"]["OK"]["content"]["application/json"]["schema"] = {
+
+            scm = {
                 "allOf": [
                     {"$ref": "#/components/schemas/Response"},
                     {
@@ -424,27 +424,29 @@ class JSONSchemaWriter:
                 ]
             }
 
+            obj["responses"]["OK"]["content"]["application/json"]["schema"] = scm
+
             self.makeRequestBody(obj, pr, api_object)
 
-            if pr.name == "List":
-                obj["schema"] = {
-                    "type": "object",
-                    "properties": {
-                        "offset": {
-                            "type": "integer",
-                            "description": "Which object index to start with",
-                            "example": 45,
-                            "default": 0
-                        },
-                        "limit": {
-                            "type": "integer",
-                            "description": "How many objects to return",
-                            "min": 1,
-                            "max": 200,
-                            "default": 20
-                        }
-                    }
-                }
+            # if pr.name == "List":
+            #     obj["schema"] = {
+            #         "type": "object",
+            #         "properties": {
+            #             "offset": {
+            #                 "type": "integer",
+            #                 "description": "Which object index to start with",
+            #                 "example": 45,
+            #                 "default": 0
+            #             },
+            #             "limit": {
+            #                 "type": "integer",
+            #                 "description": "How many objects to return",
+            #                 "min": 1,
+            #                 "max": 200,
+            #                 "default": 20
+            #             }
+            #         }
+            #     }
 
             # check if we are a sub object path
             if "{" in api_object.name:
@@ -553,8 +555,8 @@ class JSONSchemaWriter:
                 object_schemas[name] = json.loads(
                     json.dumps(out["components"]["schemas"][name]))
             out = self.fillResponseSchema(out)
-            # add paths
 
+            # add paths
             if out["paths"] is None:
                 out["paths"] = self.getPaths(name, idx, obj)
             else:

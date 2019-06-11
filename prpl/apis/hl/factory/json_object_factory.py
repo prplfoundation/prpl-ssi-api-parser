@@ -271,7 +271,7 @@ class JSONObjectFactory:
                 # check required, if it is true, set it on the existing property
                 if property_name in path_schema["responses"]["OK"]["content"]["application/json"]["schema"]["required"]:
                     fields[property_name].is_required = True
-
+        
         return fields
 
     def _get_objects(self):
@@ -293,8 +293,6 @@ class JSONObjectFactory:
                 name = p[0:p.rfind(".")]
                 if name not in object_names:
                     object_names.append(name)
-
-            print(object_names)
 
             for o in object_names:
 
