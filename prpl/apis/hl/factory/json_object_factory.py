@@ -143,7 +143,7 @@ class JSONObjectFactory:
         for name, e in object_schema["events"].items():
 
             prefix = "{}_".format(object_name.upper().replace(".", "_"))
-            # name = "{}".format(e['code'].replace(prefix, ""))
+            name = "{}".format(name.replace(prefix, ""))
             api_event = HLAPIEvent(
                 e["code"], name, e['description'], e["content"]["application/json"]['example'])
             events.append(api_event)
@@ -313,11 +313,15 @@ class JSONObjectFactory:
                 self.logger.debug(
                     'Objects - Created object "{}"'.format(o))
 
+                # if we are parsing a first level object,
                 # Parse events and append.
-                api_object.events += self._get_events(schema, object_name)
+                if "{" not in o:
+                    api_object.events += self._get_events(schema, o)
 
+                # If this is a sub object
                 # Parse instances and append.
-                if "instances" in object_schema.keys():
+
+                if o[-1] == "}" and "instances" in object_schema.keys():
                     api_object.instances += self._get_instances(
                         object_schema["instances"])
 

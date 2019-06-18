@@ -154,7 +154,7 @@ class Launcher:
 
 if __name__ == '__main__':
     # l = Launcher(
-    #     'specs/input/3.8.2.7 [RC].xlsx'
+    #     'specs/input/3.8.2.7RC.xlsx'
     # )
     l = Launcher(
             'specs/generated/json/v3.8.2.7',
