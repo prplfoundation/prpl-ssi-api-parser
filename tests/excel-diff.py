@@ -133,7 +133,7 @@ def generate_sheet_diff(sheet_ORIGINAL, sheet_GENERATED):
 
 def main():
     path_ORIGINAL = Path('../specs/input/3.8.2.7RC.xlsx')
-    path_GENERATED = Path('../specs/generated/Prpl-SSI-API_v3.8.2.7.xlsx')
+    path_GENERATED = Path('../specs/generated/Prpl-SSI-API_v3.8.2.xlsx')
 
     diff_files(path_ORIGINAL, path_GENERATED)
 

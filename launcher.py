@@ -1,5 +1,6 @@
 
 import logging
+import sys
 
 
 # TODO: make dynamic
@@ -55,7 +56,7 @@ class Launcher:
         formatter = logging.Formatter(log_format)
         console.setFormatter(formatter)
 
-        # logging.getLogger().addHandler(console)
+        logging.getLogger().addHandler(console)
 
     def _parse_from_excel(self):
         """Fills the api object with input from an Excel HL-API specification file.
@@ -142,7 +143,6 @@ class Launcher:
             raise Exception("Error, no API parsed")
 
         logger.info('Finished building API {}.\n'.format(self.api))
-        print("done parsing")
 
         if self.output_format == "json":
             self._build_json_schema()
@@ -153,12 +153,47 @@ class Launcher:
 
 
 if __name__ == '__main__':
-    # l = Launcher(
-    #     'specs/input/3.8.2.7RC.xlsx'
-    # )
-    l = Launcher(
-            'specs/generated/json/v3.8.2.7',
-            input_format="json",
-            output_format="xls"
-            )
-    l.run()
+
+    logger = logging.getLogger('Launcher')
+
+    help = '''
+    Usage: launcher.py [-j|-x]
+           launcher.py [-h]
+    
+    Options:
+      -j, --json    Converts from xls file to JSON files. The input file must be in /specs/input
+      -x, --xls     Converts from JSON to xls file. The input files must be in /specs/generated/json
+    '''
+
+    parameter_error = '''
+    launcher.py: parameter error - ONE option must be chosen.
+    
+    {}
+    '''.format(help)
+
+    if not len(sys.argv) == 2:
+        print(parameter_error)
+
+    elif sys.argv[1] == '-j' or sys.argv[1] == '--json':
+        l = Launcher('specs/input/3.8.2.7RC.xlsx')
+
+        try:
+            l.run()
+
+        except FileNotFoundError:
+            logger.info('ERROR: Cannot parse "specs/input/3.8.2.7RC.xlsx": No such file or directory.')
+
+    elif sys.argv[1] == '-x' or sys.argv[1] == '--xls':
+        l = Launcher('specs/generated/json/v3.8.2.7', input_format="json", output_format="xls")
+        try:
+            l.run()
+
+        except FileNotFoundError:
+            logger.info('ERROR: Cannot parse files in "specs/generated/json/v3.8.2.7": No such file or directory.')
+
+    elif sys.argv[1] == '-h' or sys.argv[1] == '--help':
+        print(help)
+
+    else:
+        print(parameter_error)
+

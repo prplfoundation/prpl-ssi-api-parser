@@ -6,3 +6,5 @@ nose2
 pandas
 xlsxwriter
 pathlib
+xlrd
+xlsxwriter

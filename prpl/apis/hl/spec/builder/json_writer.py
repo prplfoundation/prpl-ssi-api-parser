@@ -74,8 +74,9 @@ class JSONSchemaWriter:
             'File - Removing previous files "{}".'.format(self.folder))
         try:
             shutil.rmtree(self.folder)
-        except Exception as e:
-            self.logger.debug("ran into an exception removing old files")
+
+        except FileNotFoundError:
+            self.logger.debug("No old files to remove.")
 
         self.logger.debug(
             'File - Finished removing files "{}".'.format(self.folder))
